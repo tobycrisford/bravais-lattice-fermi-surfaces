@@ -26,6 +26,17 @@ function scal_mult(v, s) {
     return r;
 }
 
+function vec_add(a,b) {
+    if (a.length != b.length) {
+        throw new Error("Trying to add vectors of different lengths");
+    }
+    let r = [];
+    for (let i = 0;i < a.length;i++) {
+        r.push(a[i] + b[i]);
+    }
+    return r;
+}
+
 /*
 Return primitive vectors for reciprocal lattice given primitive vectors for lattice
 (we factorize out the 2pi scaling for numerical simplicity)
@@ -77,7 +88,46 @@ function plane_intersection(plane_a, plane_b) {
         clean_answer.push(c[0]);
     }
     return {t: scal_mult(tangent, 1/tangent_length),
-            a: clean_answer};
+            a: clean_answer,
+            vertices: [],
+            active: true};
+}
+
+/*
+Find vertex given by intersection of two edges, return null if no intersection
+*/
+function edge_intersection(edge_a, edge_b) {
+    let m = [[edge_a.t[0],-edge_b.t[0]],[edge_a.t[1],-edge_b.t[1]]];
+    if (Math.abs(math.det(m)) < 10**(-6)) {
+        return null;
+    }
+    let v = [-edge_a.a[0] + edge_b.a[0], -edge_a.a[1] + edge_b.a[1]];
+    let potential_crossing = math.lusolve(m, v);
+    a_point = vec_add(scal_mult(edge_a.t, potential_crossing[0][0]), edge_a.a);
+    b_point = vec_add(scal_mult(edge_b.t, potential_crossing[1][0]), edge_b.a);
+    for (let i = 0;i < a_point.length;i++) {
+        if (Math.abs(a_point[i] - b_point[i]) > 10**(-6)) {
+            return null; // Is not a crossing point
+        }
+    }
+    return {v: a_point,
+            active: true};
+}
+
+function check_active(sub_components) {
+    let some_inactive = false;
+    for (const sc of sub_components) {
+        if (sc.active) {
+            return true; // If any sub-components active then keep this component active
+        }
+        else {
+            some_inactive = true;
+        }
+    }
+    if (some_inactive) {
+        return false;
+    }
+    return true; // If no sub-components, want to keep it
 }
 
 /*
@@ -85,16 +135,47 @@ Add new plane to working polyhedron construction
 */
 function add_plane_to_polyhedron(polyhedron, plane) {
     
-    let new_edges = [];
     for (const face of polyhedron.faces) {
-
+        let edge = plane_intersection(face, plane);
+        if (edge !== null) {
+            for (const face_edge of face.edges) {
+                let vertex = edge_intersection(edge, face_edge);
+                if (vertex !== null) {
+                    edge.vertices.push(vertex);
+                    face_edge.vertices.push(vertex);
+                    polyhedron.vertices.push(vertex);
+                }
+            }
+            face.edges.push(edge);
+            plane.edges.push(edge);
+            polyhedron.edges.push(edge);
+        }
     }
-
     polyhedron.faces.push(plane);
 
+    // Now clean up
     for (const vertex of polyhedron.vertices) {
-        if (dot(vertex, plane.n) > plane.a) {
+        if (dot(vertex.v, plane.n) > plane.a) {
             vertex.active = false;
         }
+    }
+    for (const edge of polyhedron.edges) {
+        if (!(check_active(edge.vertices))) {
+            edge.active = false;
+        }
+    }
+    for (const face of polyhedron.faces) {
+        if (!(check_active(face.edges))) {
+            face.active = false;
+        }
+    }
+    for (const comp_label of ['faces','edges','vertices']) {
+        let new_array = [];
+        for (const comp of polyhedron[comp_label]) {
+            if (comp.active) {
+                new_array.push(comp);
+            }
+        }
+        polyhedron[comp_label] = new_array;
     }
 }
