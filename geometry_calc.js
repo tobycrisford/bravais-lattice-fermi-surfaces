@@ -37,3 +37,64 @@ function reciprocal_lattice(lattice) {
             scal_mult(cross(lattice[2],lattice[0]), 1/triple_product),
             scal_mult(cross(lattice[0],lattice[1]), 1/triple_product)];
 }
+
+
+/*
+Return Bragg plane given a reciprocal lattice point
+*/
+function bragg_plane(rl_point) {
+    let d = Math.sqrt(dot(rl_point,rl_point));
+    
+    return {n: scal_mult(rl_point, 1/d),
+            a: d / 2,
+            edges: [],
+            active: true};
+}
+
+/*
+Find edge given by intersection of two planes, return null if no intersection
+*/
+function plane_intersection(plane_a, plane_b) {
+    
+    let tangent = cross(plane_a.n, plane_b.n);
+    let tangent_length = Math.sqrt(dot(tangent, tangent));
+    if (Math.abs(tangent_length) < 10**(-6)) {
+        return null; //Planes never cross, or are identical
+    }
+
+    let m = [plane_a.n, plane_b.n, [0,0,0]];
+    let answer = null;
+    for (let i = 0;i < 3;i++) {
+        m[2] = [0,0,0];
+        m[2][i] = 1;
+        if (Math.abs(math.det(m)) > 10**(-6)) { 
+            answer = math.lusolve(m, [plane_a.a, plane_b.a, 0]);
+            break;
+        }
+    }
+    let clean_answer = [];
+    for (const c of answer) {
+        clean_answer.push(c[0]);
+    }
+    return {t: scal_mult(tangent, 1/tangent_length),
+            a: clean_answer};
+}
+
+/*
+Add new plane to working polyhedron construction
+*/
+function add_plane_to_polyhedron(polyhedron, plane) {
+    
+    let new_edges = [];
+    for (const face of polyhedron.faces) {
+
+    }
+
+    polyhedron.faces.push(plane);
+
+    for (const vertex of polyhedron.vertices) {
+        if (dot(vertex, plane.n) > plane.a) {
+            vertex.active = false;
+        }
+    }
+}
