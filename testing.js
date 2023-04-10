@@ -19,5 +19,5 @@ function test() {
         }
     }
     console.log(prim_vectors);
-    document.getElementById("output").textContent = "primitive vectors: " + prim_vectors.toString();
+    document.getElementById("output").textContent = "reciprocal lattice: " + reciprocal_lattice(prim_vectors).toString();
 }
