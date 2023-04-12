@@ -97,12 +97,40 @@ function plane_intersection(plane_a, plane_b) {
 Find vertex given by intersection of two edges, return null if no intersection
 */
 function edge_intersection(edge_a, edge_b) {
-    let m = [[edge_a.t[0],-edge_b.t[0]],[edge_a.t[1],-edge_b.t[1]]];
-    if (Math.abs(math.det(m)) < 10**(-6)) {
+    let m = [[edge_a.t[0],-edge_b.t[0]],
+             [edge_a.t[1],-edge_b.t[1]],
+             [edge_a.t[2],-edge_b.t[2]]];
+    let v = [-edge_a.a[0] + edge_b.a[0],
+             -edge_a.a[1] + edge_b.a[1],
+             -edge_a.a[2] + edge_b.a[2]];
+    let sub_m = [];
+    let sub_v = [];
+    for (let i = 0;i < 3;i++) {
+        if (dot(m[i],m[i])**2 < 10**(-6)) {
+            if (Math.abs(v[i]) > 10**(-6)) {
+                return null;
+            }
+        }
+        else {
+            if (sub_m.length == 0) {
+                sub_m.push(m[i]);
+                sub_v.push(v[i]);
+            }
+            else {
+                let test_m = sub_m.concat([m[i]]);
+                if (Math.abs(math.det(test_m)) > 10**(-6)) {
+                    sub_m.push(m[i]);
+                    sub_v.push(v[i]);
+                    break;
+                }
+            }
+        }
+    }
+    if (sub_m.length < 2) {
         return null;
     }
-    let v = [-edge_a.a[0] + edge_b.a[0], -edge_a.a[1] + edge_b.a[1]];
-    let potential_crossing = math.lusolve(m, v);
+    
+    let potential_crossing = math.lusolve(sub_m, sub_v);
     a_point = vec_add(scal_mult(edge_a.t, potential_crossing[0][0]), edge_a.a);
     b_point = vec_add(scal_mult(edge_b.t, potential_crossing[1][0]), edge_b.a);
     for (let i = 0;i < a_point.length;i++) {
