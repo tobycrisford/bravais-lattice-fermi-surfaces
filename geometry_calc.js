@@ -158,8 +158,51 @@ function check_active(sub_components) {
     return true; // If no sub-components, want to keep it
 }
 
+function polyhedron() {
+    this.faces = [];
+    this.edges = [];
+    this.vertices = [];
+}
+
 /*
-Add new plane to working polyhedron construction
+Prune inactive vertices, edges, and faces
+*/
+function prune_polyhedron(polyhedron) {
+
+    for (const edge of polyhedron.edges) {
+        if (!(check_active(edge.vertices))) {
+            edge.active = false;
+        }
+    }
+    for (const face of polyhedron.faces) {
+        if (!(check_active(face.edges))) {
+            face.active = false;
+        }
+    }
+    for (const comp_label of ['faces','edges','vertices']) {
+        let new_array = [];
+        for (const comp of polyhedron[comp_label]) {
+            if (comp.active) {
+                new_array.push(comp);
+            }
+        }
+        polyhedron[comp_label] = new_array;
+    }
+}
+
+function deactivate_external_vertices(polyhedron) {
+    for (const vertex of polyhedron.vertices) {
+        for (const face of polyhedron.faces) {
+            if (dot(vertex.v, face.n) > face.a) {
+                vertex.active = false;
+                break;
+            }
+        }
+    }
+}
+
+/*
+Add new plane to working polyhedron construction - might leave duplicate vertices
 */
 function add_plane_to_polyhedron(polyhedron, plane) {
     
@@ -182,28 +225,55 @@ function add_plane_to_polyhedron(polyhedron, plane) {
     polyhedron.faces.push(plane);
 
     // Now clean up
-    for (const vertex of polyhedron.vertices) {
-        if (dot(vertex.v, plane.n) > plane.a) {
-            vertex.active = false;
-        }
-    }
-    for (const edge of polyhedron.edges) {
-        if (!(check_active(edge.vertices))) {
-            edge.active = false;
-        }
-    }
-    for (const face of polyhedron.faces) {
-        if (!(check_active(face.edges))) {
-            face.active = false;
-        }
-    }
-    for (const comp_label of ['faces','edges','vertices']) {
-        let new_array = [];
-        for (const comp of polyhedron[comp_label]) {
-            if (comp.active) {
-                new_array.push(comp);
+    deactivate_external_vertices(polyhedron);
+    prune_polyhedron(polyhedron);
+}
+
+function deactivate_duplicate_vertices(polyhedron) {
+    for (let i = 0;i < polyhedron.vertices.length;i++) {
+        for (let j = i+1;j < polyhedron.vertices.length;j++) {
+            let vec_diff = vec_add(polyhedron.vertices[i].v, scal_mult(polyhedron.vertices[j].v,-1));
+            if (Math.abs(dot(vec_diff,vec_diff)) < 10**(-6)) {
+                polyhedron.vertices[i].active = false;
+                break;
             }
         }
-        polyhedron[comp_label] = new_array;
     }
+}
+
+/*
+Create first brilluoin zone polyhedron given primitive lattice vectors
+*/
+function create_first_brillouin_zone(reciprocal_vectors) {
+
+    let poly = new polyhedron();
+
+    // Should have proper way of figuring out how many reciprocal lattice vectors i need to look at
+    // but for now just try this fairly brute force way that should normally work
+    let check_limit = 2;
+    for (let i = -check_limit;i < check_limit+1;i++) {
+        for (let j = -check_limit;j < check_limit+1;j++) {
+            for (let k = -check_limit;k < check_limit+1;k++) {
+                if (i != 0 || j != 0 || k != 0) {
+                    console.log(poly.vertices.length);
+                    console.log(poly.edges.length);
+                    console.log(poly.faces.length);
+                    console.log(i);
+                    console.log(j);
+                    console.log(k);
+                    console.log('----');
+                    let reciprocal_lattice_point = [0,0,0];
+                    reciprocal_lattice_point = vec_add(reciprocal_lattice_point, scal_mult(reciprocal_vectors[0],i));
+                    reciprocal_lattice_point = vec_add(reciprocal_lattice_point, scal_mult(reciprocal_vectors[1],j));
+                    reciprocal_lattice_point = vec_add(reciprocal_lattice_point, scal_mult(reciprocal_vectors[2],k));
+                    add_plane_to_polyhedron(poly, bragg_plane(reciprocal_lattice_point));
+                }
+            }
+        }
+    }
+
+    deactivate_duplicate_vertices(poly);
+    prune_polyhedron(poly);
+
+    return poly;
 }

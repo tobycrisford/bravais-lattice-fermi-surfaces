@@ -18,6 +18,7 @@ function test() {
             prim_vectors[i].push(parseFloat(document.getElementById(i.toString() + "_" + j.toString()).value));
         }
     }
-    console.log(prim_vectors);
-    document.getElementById("output").textContent = "reciprocal lattice: " + reciprocal_lattice(prim_vectors).toString();
+    let reciprocal_lattice_vectors = reciprocal_lattice(prim_vectors);
+    let poly = create_first_brillouin_zone(reciprocal_lattice_vectors);
+    document.getElementById("output").textContent = JSON.stringify(poly);
 }
