@@ -236,14 +236,15 @@ function add_plane_to_polyhedron(polyhedron, plane) {
     prune_polyhedron(polyhedron);
 }
 
-function deactivate_duplicate_vertices(polyhedron) {
-    for (let i = 0;i < polyhedron.vertices.length;i++) {
-        for (let j = i+1;j < polyhedron.vertices.length;j++) {
-            let vec_diff = vec_add(polyhedron.vertices[i].v, scal_mult(polyhedron.vertices[j].v,-1));
-            if (Math.abs(dot(vec_diff,vec_diff)) < 10**(-6)) {
-                polyhedron.vertices[i].active = false;
-                break;
-            }
+function deactivate_singular_components(polyhedron) {
+    for (const face of polyhedron.faces) {
+        if (face.edges.length < 3) {
+            face.active = false;
+        }
+    }
+    for (const edge of polyhedron.edges) {
+        if (edge.vertices.length < 2) {
+            edge.active = false;
         }
     }
 }
@@ -272,13 +273,15 @@ function create_first_brillouin_zone(reciprocal_vectors) {
         }
     }
 
-    deactivate_duplicate_vertices(poly);
+    //deactivate_duplicate_vertices(poly);
     prune_polyhedron(poly);
     for (sc of ['faces','edges']) {
         for (sce of poly[sc]) {
             prune_polyhedron(sce);
         }
     }
+    deactivate_singular_components(poly);
+    prune_polyhedron(poly);
 
     console.log(poly);
     return poly;
