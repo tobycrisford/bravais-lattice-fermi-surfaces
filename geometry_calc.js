@@ -258,19 +258,30 @@ function create_first_brillouin_zone(reciprocal_vectors) {
 
     // Should have proper way of figuring out how many reciprocal lattice vectors i need to look at
     // but for now just try this fairly brute force way that should normally work
-    let check_limit = 2;
+    let check_limit = 3;
+    let bragg_planes = [];
     for (let i = -check_limit;i < check_limit+1;i++) {
         for (let j = -check_limit;j < check_limit+1;j++) {
             for (let k = -check_limit;k < check_limit+1;k++) {
                 if (i != 0 || j != 0 || k != 0) {
+                    console.log([i,j,k]);
                     let reciprocal_lattice_point = [0,0,0];
                     reciprocal_lattice_point = vec_add(reciprocal_lattice_point, scal_mult(reciprocal_vectors[0],i));
                     reciprocal_lattice_point = vec_add(reciprocal_lattice_point, scal_mult(reciprocal_vectors[1],j));
                     reciprocal_lattice_point = vec_add(reciprocal_lattice_point, scal_mult(reciprocal_vectors[2],k));
-                    add_plane_to_polyhedron(poly, bragg_plane(reciprocal_lattice_point));
+                    bragg_planes.push([bragg_plane(reciprocal_lattice_point), dot(reciprocal_lattice_point, reciprocal_lattice_point)]);
                 }
             }
         }
+    }
+
+    // Now sort bragg planes by distance for efficient polyhedron construction
+    bragg_planes.sort(function(a,b){return a[1] - b[1]});
+
+    // Now build polyhedron
+    for (const bragg_plane of bragg_planes) {
+        console.log(bragg_plane[1]);
+        add_plane_to_polyhedron(poly, bragg_plane[0]);
     }
 
     //deactivate_duplicate_vertices(poly);
