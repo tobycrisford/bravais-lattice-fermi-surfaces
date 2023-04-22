@@ -166,27 +166,34 @@ function polyhedron() {
 
 /*
 Prune inactive vertices, edges, and faces
+Can also be used on a face or an edge
 */
 function prune_polyhedron(polyhedron) {
 
-    for (const edge of polyhedron.edges) {
-        if (!(check_active(edge.vertices))) {
-            edge.active = false;
+    if ('edges' in polyhedron) {
+        for (const edge of polyhedron.edges) {
+            if (!(check_active(edge.vertices))) {
+                edge.active = false;
+            }
         }
     }
-    for (const face of polyhedron.faces) {
-        if (!(check_active(face.edges))) {
-            face.active = false;
+    if ('faces' in polyhedron) {
+        for (const face of polyhedron.faces) {
+            if (!(check_active(face.edges))) {
+                face.active = false;
+            }
         }
     }
     for (const comp_label of ['faces','edges','vertices']) {
-        let new_array = [];
-        for (const comp of polyhedron[comp_label]) {
-            if (comp.active) {
-                new_array.push(comp);
+        if (comp_label in polyhedron) {
+            let new_array = [];
+            for (const comp of polyhedron[comp_label]) {
+                if (comp.active) {
+                    new_array.push(comp);
+                }
             }
+            polyhedron[comp_label] = new_array;
         }
-        polyhedron[comp_label] = new_array;
     }
 }
 
@@ -255,13 +262,6 @@ function create_first_brillouin_zone(reciprocal_vectors) {
         for (let j = -check_limit;j < check_limit+1;j++) {
             for (let k = -check_limit;k < check_limit+1;k++) {
                 if (i != 0 || j != 0 || k != 0) {
-                    console.log(poly.vertices.length);
-                    console.log(poly.edges.length);
-                    console.log(poly.faces.length);
-                    console.log(i);
-                    console.log(j);
-                    console.log(k);
-                    console.log('----');
                     let reciprocal_lattice_point = [0,0,0];
                     reciprocal_lattice_point = vec_add(reciprocal_lattice_point, scal_mult(reciprocal_vectors[0],i));
                     reciprocal_lattice_point = vec_add(reciprocal_lattice_point, scal_mult(reciprocal_vectors[1],j));
@@ -274,6 +274,12 @@ function create_first_brillouin_zone(reciprocal_vectors) {
 
     deactivate_duplicate_vertices(poly);
     prune_polyhedron(poly);
+    for (sc of ['faces','edges']) {
+        for (sce of poly[sc]) {
+            prune_polyhedron(sce);
+        }
+    }
 
+    console.log(poly);
     return poly;
 }
