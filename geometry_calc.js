@@ -1,3 +1,5 @@
+import { det, lusolve } from 'mathjs'
+
 function dot(a,b) {
     if (a.length != b.length) {
         throw new Error("Trying to dot product vectors of different lengths");
@@ -41,7 +43,7 @@ function vec_add(a,b) {
 Return primitive vectors for reciprocal lattice given primitive vectors for lattice
 (we factorize out the 2pi scaling for numerical simplicity)
 */
-function reciprocal_lattice(lattice) {
+export function reciprocal_lattice(lattice) {
     let triple_product = dot(lattice[0], cross(lattice[1],lattice[2]));
 
     return [scal_mult(cross(lattice[1],lattice[2]), 1/triple_product),
@@ -78,8 +80,8 @@ function plane_intersection(plane_a, plane_b) {
     for (let i = 0;i < 3;i++) {
         m[2] = [0,0,0];
         m[2][i] = 1;
-        if (Math.abs(math.det(m)) > 10**(-6)) { 
-            answer = math.lusolve(m, [plane_a.a, plane_b.a, 0]);
+        if (Math.abs(det(m)) > 10**(-6)) { 
+            answer = lusolve(m, [plane_a.a, plane_b.a, 0]);
             break;
         }
     }
@@ -118,7 +120,7 @@ function edge_intersection(edge_a, edge_b) {
             }
             else {
                 let test_m = sub_m.concat([m[i]]);
-                if (Math.abs(math.det(test_m)) > 10**(-6)) {
+                if (Math.abs(det(test_m)) > 10**(-6)) {
                     sub_m.push(m[i]);
                     sub_v.push(v[i]);
                     break;
@@ -130,7 +132,7 @@ function edge_intersection(edge_a, edge_b) {
         return null;
     }
     
-    let potential_crossing = math.lusolve(sub_m, sub_v);
+    let potential_crossing = lusolve(sub_m, sub_v);
     a_point = vec_add(scal_mult(edge_a.t, potential_crossing[0][0]), edge_a.a);
     b_point = vec_add(scal_mult(edge_b.t, potential_crossing[1][0]), edge_b.a);
     for (let i = 0;i < a_point.length;i++) {
@@ -252,7 +254,7 @@ function deactivate_singular_components(polyhedron) {
 /*
 Create first brilluoin zone polyhedron given primitive lattice vectors
 */
-function create_first_brillouin_zone(reciprocal_vectors) {
+export function create_first_brillouin_zone(reciprocal_vectors) {
 
     let poly = new polyhedron();
 

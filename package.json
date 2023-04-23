@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "mathjs": "^11.8.0",
+    "parcel": "^2.8.3"
+  }
+}
