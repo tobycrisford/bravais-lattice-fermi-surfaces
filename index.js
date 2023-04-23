@@ -1,7 +1,7 @@
 import {create_first_brillouin_zone, reciprocal_lattice} from "./geometry_calc.js" 
 
 function test() {
-    prim_vectors = [[],[],[]];
+    let prim_vectors = [[],[],[]];
     for (let i = 0;i < 3;i++) {
         for (let j = 0;j < 3;j++) {
             prim_vectors[i].push(parseFloat(document.getElementById(i.toString() + "_" + j.toString()).value));
