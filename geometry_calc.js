@@ -400,8 +400,34 @@ function face_to_threejs_shape(face) {
         shape_points.push(new THREE.Vector2(coords[0],coords[1]));
     }
     const shape = new THREE.Shape(shape_points);
+
+    // Shift shape back to 3D coords in right place
+    let translation = scal_mult(face.n, face.a);
+    let mt_elements = [];
+    for (const v of [face_basis[0],face_basis[1],face.n,translation]) {
+        for (let i = 0;i < v.length;i++) {
+            mt_elements.push(v[i]);
+        }
+        mt_elements.push(0);
+    }
+    mt_elements[15] = 1;
+    let mt = THREE.Matrix4();
+    mt.set(...mt_elements);
+    mt.transpose();
+
+    shape.applyMatrix4(mt);
+
+    return shape;
 }
 
 export function polyhedron_to_threejs_geometry(polyhedron) {
+    let shapes = [];
+    for (const face of polyhedron.faces) {
+        let face_shape = face_to_threejs_shape(face);
+        if (face_shape !== null) {
+            shapes.push(face_shape);
+        }
+    }
 
+    return shapes;
 }
