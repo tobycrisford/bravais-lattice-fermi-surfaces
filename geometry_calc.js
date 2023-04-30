@@ -311,7 +311,7 @@ function dedupe_edge(edge) {
     let start_vertex = edge.vertices[0].v;
     let end_vertex = null;
     let max_dist = 10**(-6);
-    for (const i = 1;i < edge.vertices.length;i++) {
+    for (let i = 1;i < edge.vertices.length;i++) {
         let d = dist(start_vertex, edge.vertices[i].v);
         if (d > max_dist) {
             end_vertex = edge.vertices[i].v;
@@ -411,7 +411,7 @@ function face_to_threejs_shape(face) {
         mt_elements.push(0);
     }
     mt_elements[15] = 1;
-    let mt = THREE.Matrix4();
+    let mt = new THREE.Matrix4();
     mt.set(...mt_elements);
     mt.transpose();
 
