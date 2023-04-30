@@ -379,13 +379,7 @@ function construct_face_basis(face) {
             break;
         }
     }
-    for (const b of [[1,0,0],[0,1,0],[0,0,1]]) {
-        let test = cross(face.n, face_basis[0]);
-        if (dot(test,test) > 10**(-6)) {
-            face_basis.push(test);
-            break;
-        }
-    }
+    face_basis.push(cross(face.n, face_basis[0]));
     for (let i = 0;i < 2;i++) {
         face_basis[i] = scal_mult(face_basis[i],1/Math.sqrt(dot(face_basis[i],face_basis[i])));
     }
