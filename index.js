@@ -38,9 +38,30 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
 const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+const material = new THREE.MeshLambertMaterial( { color: 0xFFFFFF } );
 const cube = new THREE.Mesh( geometry, material );
 scene.add( cube );
+
+const lights = [];
+const lightValues = [
+    {colour: 0x14D14A, intensity: 8, dist: 12, x: 1, y: 0, z: 8},
+    {colour: 0xBE61CF, intensity: 6, dist: 12, x: -2, y: 1, z: -10},
+    {colour: 0x00FFFF, intensity: 3, dist: 10, x: 0, y: 10, z: 1},
+    {colour: 0x00FF00, intensity: 6, dist: 12, x: 0, y: -10, z: -1},
+    {colour: 0x16A7F5, intensity: 6, dist: 12, x: 10, y: 3, z: 0},
+    {colour: 0x90F615, intensity: 6, dist: 12, x: -10, y: -1, z: 0}
+];
+for (let i=0; i<lightValues.length; i++) {
+    lights[i] = new THREE.PointLight(
+        lightValues[i]['colour'], 
+        lightValues[i]['intensity'], 
+        lightValues[i]['dist']);
+    lights[i].position.set(
+        lightValues[i]['x'], 
+        lightValues[i]['y'], 
+        lightValues[i]['z']);
+    scene.add(lights[i]);
+}
 
 camera.position.z = 5;
 
