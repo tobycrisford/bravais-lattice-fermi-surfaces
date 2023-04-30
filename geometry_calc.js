@@ -338,17 +338,31 @@ function find_edge_traversal(face) {
 
     let edge_traversal = [deduped_edges[0][0],deduped_edges[0][1]];
     while (true) {
+        let added = false;
         for (let i = 0;i < deduped_edges.length;i++) {
             for (const j of [0,1]) {
                 if (dist(edge_traversal[edge_traversal.length-1],deduped_edges[i][j]) < 10**(-6)) {
                     if (dist(edge_traversal[edge_traversal.length-2],deduped_edges[i][j]) > 10**(-6)) {
                         edge_traversal.push(deduped_edges[i][j]);
                         edge_traversal.push(deduped_edges[i][1-j]);
+                        added = true;
+                        break;
                     }
                 }
             }
+            if (added) {
+                break;
+            }
+        }
+        if (!added) {
+            return null;
+        }
+        if (dist(edge_traversal[edge_traversal.length-1],edge_traversal[0]) < 10**(-6)) {
+            break;
         }
     }
+
+    return edge_traversal;
 }
 
 function face_to_threejs_shape(face) {
