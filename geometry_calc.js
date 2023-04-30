@@ -1,4 +1,5 @@
-import { det, lusolve } from 'mathjs'
+import { det, lusolve } from 'mathjs';
+import * as THREE from 'three';
 
 function dot(a,b) {
     if (a.length != b.length) {
@@ -37,6 +38,11 @@ function vec_add(a,b) {
         r.push(a[i] + b[i]);
     }
     return r;
+}
+
+function dist(a,b) {
+    let diff = vec_add(a, scal_mult(b, -1));
+    return Math.sqrt(dot(diff, diff));
 }
 
 /*
@@ -277,7 +283,8 @@ export function create_first_brillouin_zone(reciprocal_vectors) {
         }
     }
 
-    // Now sort bragg planes by distance for efficient polyhedron construction
+    // Now sort bragg planes by distance for efficient polyhedron construction,
+    // and to make sure pruning works correctly.
     bragg_planes.sort(function(a,b){return a[1] - b[1]});
 
     // Now build polyhedron
@@ -298,4 +305,56 @@ export function create_first_brillouin_zone(reciprocal_vectors) {
 
     console.log(poly);
     return poly;
+}
+
+function dedupe_edge(edge) {
+    let start_vertex = edge.vertices[0].v;
+    let end_vertex = null;
+    let max_dist = 10**(-6);
+    for (const i = 1;i < edge.vertices.length;i++) {
+        let d = dist(start_vertex, edge.vertices[i].v);
+        if (d > max_dist) {
+            end_vertex = edge.vertices[i].v;
+            max_dist = d;
+        }
+    }
+    if (end_vertex === null) {
+        return null;
+    }
+    return [start_vertex, end_vertex];
+}
+
+function find_edge_traversal(face) {
+    let deduped_edges = [];
+    for (let i = 0;i < face.edges.length;i++) {
+        let deduped_edge = dedupe_edge(face.edges[i]);
+        if (deduped_edge !== null) {
+            deduped_edges.push(deduped_edge);
+        }
+    }
+    if (deduped_edges.length === 0) {
+        return null;
+    }
+
+    let edge_traversal = [deduped_edges[0][0],deduped_edges[0][1]];
+    while (true) {
+        for (let i = 0;i < deduped_edges.length;i++) {
+            for (const j of [0,1]) {
+                if (dist(edge_traversal[edge_traversal.length-1],deduped_edges[i][j]) < 10**(-6)) {
+                    if (dist(edge_traversal[edge_traversal.length-2],deduped_edges[i][j]) > 10**(-6)) {
+                        edge_traversal.push(deduped_edges[i][j]);
+                        edge_traversal.push(deduped_edges[i][1-j]);
+                    }
+                }
+            }
+        }
+    }
+}
+
+function face_to_threejs_shape(face) {
+
+}
+
+export function polyhedron_to_threejs_geometry(polyhedron) {
+
 }
