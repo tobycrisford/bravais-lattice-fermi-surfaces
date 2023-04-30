@@ -343,7 +343,6 @@ function find_edge_traversal(face) {
             for (const j of [0,1]) {
                 if (dist(edge_traversal[edge_traversal.length-1],deduped_edges[i][j]) < 10**(-6)) {
                     if (dist(edge_traversal[edge_traversal.length-2],deduped_edges[i][j]) > 10**(-6)) {
-                        edge_traversal.push(deduped_edges[i][j]);
                         edge_traversal.push(deduped_edges[i][1-j]);
                         added = true;
                         break;
@@ -365,8 +364,48 @@ function find_edge_traversal(face) {
     return edge_traversal;
 }
 
-function face_to_threejs_shape(face) {
+// Turns 3d coordinates for v into 2d coords on face
+function project_to_plane_coords(face_basis, v) {
+    return [dot(v, face_basis[0]),dot(v, face_basis[1])];
+}
 
+// Construct 2 orthonormal basis vectors parallel to given face
+function construct_face_basis(face) {
+    let face_basis = [];
+    for (const b of [[1,0,0],[0,1,0],[0,0,1]]) {
+        let test = cross(b, face.n);
+        if (dot(test,test) > 10**(-6)) {
+            face_basis.push(test);
+            break;
+        }
+    }
+    for (const b of [[1,0,0],[0,1,0],[0,0,1]]) {
+        let test = cross(face.n, face_basis[0]);
+        if (dot(test,test) > 10**(-6)) {
+            face_basis.push(test);
+            break;
+        }
+    }
+    for (let i = 0;i < 2;i++) {
+        face_basis[i] = scal_mult(face_basis[i],1/Math.sqrt(dot(face_basis[i],face_basis[i])));
+    }
+    return face_basis;
+}
+
+function face_to_threejs_shape(face) {
+    let edge_traversal = find_edge_traversal(face);
+
+    if (edge_traversal === null) {
+        return null;
+    }
+
+    let face_basis = construct_face_basis(face);
+    let shape_points = [];
+    for (let i = 0;i < edge_traversal.length;i++) {
+        let coords = project_to_plane_coords(face_basis, edge_traversal[i]);
+        shape_points.push(new THREE.Vector2(coords[0],coords[1]));
+    }
+    const shape = new THREE.Shape(shape_points);
 }
 
 export function polyhedron_to_threejs_geometry(polyhedron) {
