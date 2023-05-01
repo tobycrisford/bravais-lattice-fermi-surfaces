@@ -21,10 +21,12 @@ function test() {
     document.body.appendChild( renderer.domElement );
 
     const material = new THREE.MeshLambertMaterial( { color: 0xFFFFFF } );
+    const obj = new THREE.Group();
     const faces = polyhedron_to_threejs_geometry(poly, material);
     for (const face of faces) {
-        scene.add(face);
+        obj.add(face);
     }
+    scene.add(obj);
 
     const lights = [];
     const lightValues = [
@@ -51,10 +53,8 @@ function test() {
 
     function animate() {
         requestAnimationFrame( animate );
-        for (const face of faces) {
-            face.rotation.x += 0.01;
-            face.rotation.y += 0.01;
-        }
+        obj.rotation.x += 0.01;
+        obj.rotation.y += 0.01;
         renderer.render( scene, camera );
     }
     animate();
