@@ -20,10 +20,9 @@ function test() {
     renderer.setSize( window.innerWidth, window.innerHeight );
     document.body.appendChild( renderer.domElement );
 
-    const shapes = polyhedron_to_threejs_geometry(poly);
     const material = new THREE.MeshLambertMaterial( { color: 0xFFFFFF } );
-    for (const shape of shapes) {
-        const face = new THREE.Mesh(shape, material);
+    const faces = polyhedron_to_threejs_geometry(poly, material);
+    for (const face of faces) {
         scene.add(face);
     }
 
@@ -52,8 +51,10 @@ function test() {
 
     function animate() {
         requestAnimationFrame( animate );
-        cube.rotation.x += 0.01;
-        cube.rotation.y += 0.01;
+        for (const face of faces) {
+            face.rotation.x += 0.01;
+            face.rotation.y += 0.01;
+        }
         renderer.render( scene, camera );
     }
     animate();

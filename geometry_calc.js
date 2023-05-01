@@ -272,7 +272,6 @@ export function create_first_brillouin_zone(reciprocal_vectors) {
         for (let j = -check_limit;j < check_limit+1;j++) {
             for (let k = -check_limit;k < check_limit+1;k++) {
                 if (i != 0 || j != 0 || k != 0) {
-                    console.log([i,j,k]);
                     let reciprocal_lattice_point = [0,0,0];
                     reciprocal_lattice_point = vec_add(reciprocal_lattice_point, scal_mult(reciprocal_vectors[0],i));
                     reciprocal_lattice_point = vec_add(reciprocal_lattice_point, scal_mult(reciprocal_vectors[1],j));
@@ -289,7 +288,6 @@ export function create_first_brillouin_zone(reciprocal_vectors) {
 
     // Now build polyhedron
     for (const bragg_plane of bragg_planes) {
-        console.log(bragg_plane[1]);
         add_plane_to_polyhedron(poly, bragg_plane[0]);
     }
 
@@ -342,7 +340,7 @@ function find_edge_traversal(face) {
         for (let i = 0;i < deduped_edges.length;i++) {
             for (const j of [0,1]) {
                 if (dist(edge_traversal[edge_traversal.length-1],deduped_edges[i][j]) < 10**(-6)) {
-                    if (dist(edge_traversal[edge_traversal.length-2],deduped_edges[i][j]) > 10**(-6)) {
+                    if (dist(edge_traversal[edge_traversal.length-2],deduped_edges[i][1-j]) > 10**(-6)) {
                         edge_traversal.push(deduped_edges[i][1-j]);
                         added = true;
                         break;
@@ -386,7 +384,7 @@ function construct_face_basis(face) {
     return face_basis;
 }
 
-function face_to_threejs_shape(face) {
+function face_to_threejs_mesh(face, material) {
     let edge_traversal = find_edge_traversal(face);
 
     if (edge_traversal === null) {
@@ -399,7 +397,11 @@ function face_to_threejs_shape(face) {
         let coords = project_to_plane_coords(face_basis, edge_traversal[i]);
         shape_points.push(new THREE.Vector2(coords[0],coords[1]));
     }
+    console.log(edge_traversal);
+    console.log(shape_points);
     const shape = new THREE.Shape(shape_points);
+    const geometry = new THREE.ShapeGeometry(shape);
+    const mesh = new THREE.Mesh(geometry, material);
 
     // Shift shape back to 3D coords in right place
     let translation = scal_mult(face.n, face.a);
@@ -415,15 +417,15 @@ function face_to_threejs_shape(face) {
     mt.set(...mt_elements);
     mt.transpose();
 
-    shape.applyMatrix4(mt);
+    mesh.applyMatrix4(mt);
 
-    return shape;
+    return mesh;
 }
 
-export function polyhedron_to_threejs_geometry(polyhedron) {
+export function polyhedron_to_threejs_geometry(polyhedron, material) {
     let shapes = [];
     for (const face of polyhedron.faces) {
-        let face_shape = face_to_threejs_shape(face);
+        let face_shape = face_to_threejs_mesh(face, material);
         if (face_shape !== null) {
             shapes.push(face_shape);
         }
