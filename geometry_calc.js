@@ -208,7 +208,7 @@ function prune_polyhedron(polyhedron) {
 function deactivate_external_vertices(polyhedron) {
     for (const vertex of polyhedron.vertices) {
         for (const face of polyhedron.faces) {
-            if (dot(vertex.v, face.n) > face.a) {
+            if (dot(vertex.v, face.n) > face.a + 10**(-6)) {
                 vertex.active = false;
                 break;
             }
