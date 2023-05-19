@@ -30,12 +30,12 @@ function test() {
 
     const lights = [];
     const lightValues = [
-        {colour: 0x14D14A, intensity: 8, dist: 12, x: 1, y: 0, z: 8},
+        {colour: 0xE60000, intensity: 8, dist: 12, x: 1, y: 0, z: 8},
         {colour: 0xBE61CF, intensity: 6, dist: 12, x: -2, y: 1, z: -10},
-        {colour: 0x00FFFF, intensity: 3, dist: 10, x: 0, y: 10, z: 1},
-        {colour: 0x00FF00, intensity: 6, dist: 12, x: 0, y: -10, z: -1},
-        {colour: 0x16A7F5, intensity: 6, dist: 12, x: 10, y: 3, z: 0},
-        {colour: 0x90F615, intensity: 6, dist: 12, x: -10, y: -1, z: 0}
+        {colour: 0xFF0000, intensity: 3, dist: 10, x: 0, y: 10, z: 1},
+        {colour: 0xFF00FF, intensity: 6, dist: 12, x: 0, y: -10, z: -1},
+        {colour: 0x990000, intensity: 6, dist: 12, x: 10, y: 3, z: 0},
+        {colour: 0xFF9933, intensity: 6, dist: 12, x: -10, y: -1, z: 0}
     ];
     for (let i=0; i<lightValues.length; i++) {
         lights[i] = new THREE.PointLight(
