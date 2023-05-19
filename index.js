@@ -52,17 +52,22 @@ function create_visualisation(poly) {
 }
 
 function test() {
-    let prim_vectors = [[],[],[]];
-    for (let i = 0;i < 3;i++) {
-        for (let j = 0;j < 3;j++) {
-            prim_vectors[i].push(parseFloat(document.getElementById(i.toString() + "_" + j.toString()).value));
+    let reciprocal_lattice_vectors = null;
+    const standard_selection = document.getElementById("lattice").value;
+    if (standard_selection === "-") {
+        const prim_vectors = [[],[],[]];
+        for (let i = 0;i < 3;i++) {
+            for (let j = 0;j < 3;j++) {
+                prim_vectors[i].push(parseFloat(document.getElementById(i.toString() + "_" + j.toString()).value));
+            }
         }
+        reciprocal_lattice_vectors = reciprocal_lattice(prim_vectors);
     }
-    let reciprocal_lattice_vectors = reciprocal_lattice(prim_vectors);
-    let poly = create_first_brillouin_zone(reciprocal_lattice_vectors);
-
+    else {
+        reciprocal_lattice_vectors = reciprocal_lattice(standard_lattices[standard_selection]);
+    }
+    poly = create_first_brillouin_zone(reciprocal_lattice_vectors);
     create_visualisation(poly);
-
 }
 
 // Create input form
