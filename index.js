@@ -64,6 +64,20 @@ function test() {
         reciprocal_lattice_vectors = reciprocal_lattice(prim_vectors);
     }
     else {
+        let alert_required = false;
+        for (let i = 0;i < 3;i++) {
+            if (!alert_required) {
+                for (let j = 0;j < 3;j++) {
+                    if (document.getElementById(i.toString() + "_" + j.toString()).value !== "") {
+                        alert_required = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (alert_required) {
+            alert("Your custom primitive vectors are being ignored because you selected a standard lattice");
+        }
         reciprocal_lattice_vectors = reciprocal_lattice(standard_lattices[standard_selection]);
     }
     poly = create_first_brillouin_zone(reciprocal_lattice_vectors);
@@ -87,6 +101,9 @@ for (const lattice in standard_lattices) {
 document.getElementById("standard-lattice-select").appendChild(lattice_select);
 const form_element = document.getElementById("custom-prim-vectors");
 for (let i = 0;i < 3;i++) {
+    const vec_label = document.createElement("label");
+    vec_label.textContent = "Vector " + (i+1).toString() + ":  "
+    form_element.appendChild(vec_label);
     for (let j = 0;j < 3;j++) {
         const comp_input = document.createElement("input");
         comp_input.setAttribute("type","text");
