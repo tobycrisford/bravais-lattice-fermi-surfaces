@@ -1,17 +1,7 @@
 import {create_first_brillouin_zone, reciprocal_lattice, polyhedron_to_threejs_geometry} from "./geometry_calc.js" 
 import * as THREE from 'three';
 
-function test() {
-    let prim_vectors = [[],[],[]];
-    for (let i = 0;i < 3;i++) {
-        for (let j = 0;j < 3;j++) {
-            prim_vectors[i].push(parseFloat(document.getElementById(i.toString() + "_" + j.toString()).value));
-        }
-    }
-    let reciprocal_lattice_vectors = reciprocal_lattice(prim_vectors);
-    let poly = create_first_brillouin_zone(reciprocal_lattice_vectors);
-
-    // Create visualisation
+function create_visualisation(poly) {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
@@ -58,6 +48,20 @@ function test() {
         renderer.render( scene, camera );
     }
     animate();
+}
+
+function test() {
+    let prim_vectors = [[],[],[]];
+    for (let i = 0;i < 3;i++) {
+        for (let j = 0;j < 3;j++) {
+            prim_vectors[i].push(parseFloat(document.getElementById(i.toString() + "_" + j.toString()).value));
+        }
+    }
+    let reciprocal_lattice_vectors = reciprocal_lattice(prim_vectors);
+    let poly = create_first_brillouin_zone(reciprocal_lattice_vectors);
+
+    create_visualisation(poly);
+
 }
 
 // Create input form
