@@ -1,5 +1,6 @@
 import {create_first_brillouin_zone, reciprocal_lattice, polyhedron_to_threejs_geometry} from "./geometry_calc.js" 
 import * as THREE from 'three';
+import standard_lattices from './standard_lattices.json';
 
 function create_visualisation(poly) {
 
@@ -65,11 +66,24 @@ function test() {
 }
 
 // Create input form
-
-let form_element = document.getElementById("test_input");
+const lattice_select = document.createElement("select");
+lattice_select.setAttribute("name","lattice");
+lattice_select.setAttribute("id","lattice");
+function add_option(select, option) {
+    const new_option = document.createElement("option");
+    new_option.setAttribute("value",option);
+    new_option.textContent = option;
+    select.appendChild(new_option);
+}
+add_option(lattice_select, "-");
+for (const lattice in standard_lattices) {
+    add_option(lattice_select, lattice);
+}
+document.getElementById("standard-lattice-select").appendChild(lattice_select);
+const form_element = document.getElementById("custom-prim-vectors");
 for (let i = 0;i < 3;i++) {
     for (let j = 0;j < 3;j++) {
-        let comp_input = document.createElement("input");
+        const comp_input = document.createElement("input");
         comp_input.setAttribute("type","text");
         comp_input.setAttribute("id",i.toString() + "_" + j.toString());
         form_element.appendChild(comp_input);
