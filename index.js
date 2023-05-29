@@ -4,15 +4,12 @@ import standard_lattices from './standard_lattices.json';
 
 function create_visualisation(poly) {
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-
-    const renderer = new THREE.WebGLRenderer();
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    document.body.appendChild( renderer.domElement );
+    if (obj !== null) {
+        scene.remove(obj);
+    }
 
     const material = new THREE.MeshLambertMaterial( { color: 0xFFFFFF } );
-    const obj = new THREE.Group();
+    obj = new THREE.Group();
     const faces = polyhedron_to_threejs_geometry(poly, material);
     for (const face of faces) {
         obj.add(face);
@@ -115,4 +112,12 @@ for (let i = 0;i < 3;i++) {
 
 document.getElementById("test-button").addEventListener("click",test);
 
+// Create threejs scene
 
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize( window.innerWidth, window.innerHeight );
+document.body.appendChild( renderer.domElement );
+let obj = null;
