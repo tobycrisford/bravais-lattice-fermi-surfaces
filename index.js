@@ -1,4 +1,4 @@
-import {create_first_brillouin_zone, reciprocal_lattice, polyhedron_to_threejs_geometry} from "./geometry_calc.js" 
+import {create_nth_brillouin_zone, reciprocal_lattice, polyhedron_to_threejs_geometry} from "./geometry_calc.js" 
 import * as THREE from 'three';
 import standard_lattices from './standard_lattices.json';
 
@@ -83,7 +83,10 @@ function refresh_visualisation() {
         }
         reciprocal_lattice_vectors = reciprocal_lattice(standard_lattices[standard_selection]);
     }
-    poly = create_first_brillouin_zone(reciprocal_lattice_vectors);
+
+    const zone_number = parseInt(document.getElementById("zone-input").value);
+
+    poly = create_nth_brillouin_zone(reciprocal_lattice_vectors, zone_number);
     console.log("Brillouin zone created");
     create_visualisation(poly);
     console.log("Long function finished");
@@ -147,6 +150,12 @@ for (let i = 0;i < 3;i++) {
     }
     form_element.appendChild(document.createElement("br"));
 }
+const zone_select = document.getElementById("zone-number");
+const zone_input = document.createElement("input");
+zone_input.setAttribute("type","text");
+zone_input.setAttribute("id","zone-input");
+zone_input.setAttribute("value","1");
+zone_select.appendChild(zone_input);
 
 document.getElementById("test-button").addEventListener("click",visualise_button);
 

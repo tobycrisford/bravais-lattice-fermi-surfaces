@@ -257,10 +257,19 @@ function deactivate_singular_components(polyhedron) {
     }
 }
 
+function compare_faces(face_a, face_b) {
+    const n_diff = vec_add(face_a.n, scal_mult(face_b.n, -1));
+    const a_diff = Math.abs(face_a.a - face_b.a)
+    if (dot(n_diff, n_diff) < 10**(-6) && a_diff < 10**(-6)) {
+        return true;
+    }
+    return false;
+}
+
 /*
-Create first brilluoin zone polyhedron given primitive lattice vectors
+Create first brilluoin zone polyhedron given primitive lattice vectors, and faces to exclude
 */
-export function create_first_brillouin_zone(reciprocal_vectors) {
+function create_brillouin_zone(reciprocal_vectors, faces_to_exclude) {
 
     let poly = new polyhedron();
 
@@ -288,7 +297,16 @@ export function create_first_brillouin_zone(reciprocal_vectors) {
 
     // Now build polyhedron
     for (const bragg_plane of bragg_planes) {
-        add_plane_to_polyhedron(poly, bragg_plane[0]);
+        let exclude = false;
+        for (const exclusion of faces_to_exclude) {
+            if (compare_faces(bragg_plane[0], exclusion)) {
+                exclude = true;
+                break;
+            }
+        }
+        if (!exclude) {
+            add_plane_to_polyhedron(poly, bragg_plane[0]);
+        }
     }
 
     //deactivate_duplicate_vertices(poly);
@@ -302,6 +320,16 @@ export function create_first_brillouin_zone(reciprocal_vectors) {
     prune_polyhedron(poly);
 
     console.log(poly);
+    return poly;
+}
+
+export function create_nth_brillouin_zone(reciprocal_vectors, n) {
+    let faces_to_exclude = [];
+    let poly = null;
+    for (let i = 0;i < n;i++) {
+        poly = create_brillouin_zone(reciprocal_vectors, faces_to_exclude);
+        faces_to_exclude = faces_to_exclude.concat(poly.faces);
+    }
     return poly;
 }
 
