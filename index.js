@@ -48,7 +48,7 @@ function create_visualisation(poly) {
     animate();
 }
 
-async function refresh_visualisation() {
+function refresh_visualisation() {
     console.log("Long function called");
 
     let reciprocal_lattice_vectors = null;
