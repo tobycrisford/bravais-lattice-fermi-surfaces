@@ -48,7 +48,9 @@ function create_visualisation(poly) {
     animate();
 }
 
-function test() {
+async function refresh_visualisation() {
+    console.log("Long function called");
+
     let reciprocal_lattice_vectors = null;
     const standard_selection = document.getElementById("lattice").value;
     if (standard_selection === "-") {
@@ -78,7 +80,39 @@ function test() {
         reciprocal_lattice_vectors = reciprocal_lattice(standard_lattices[standard_selection]);
     }
     poly = create_first_brillouin_zone(reciprocal_lattice_vectors);
+    console.log("Brillouin zone created");
     create_visualisation(poly);
+    console.log("Long function finished");
+}
+
+async function start_async_refresh() {
+    console.log("Creating promise");
+    return new Promise(function(resolve, reject) {
+        setTimeout(function() {
+            refresh_visualisation();
+            resolve("");
+        }, 500);
+    })
+}
+
+function enable_button() {
+    const test_button = document.getElementById("test-button");
+    test_button.setAttribute("value", "Visualise");
+    test_button.removeAttribute("disabled");
+}
+
+function disable_button() {
+    const test_button = document.getElementById("test-button");
+    test_button.setAttribute("value","Loading...");
+    test_button.setAttribute("disabled", "true");
+}
+
+async function visualise_button() {
+    console.log("Button pressed");
+    disable_button();
+    console.log("Loading status set");
+    const refresh_promise = start_async_refresh().then((value) => (enable_button()));
+    console.log("Promise created");
 }
 
 // Create input form
@@ -110,7 +144,7 @@ for (let i = 0;i < 3;i++) {
     form_element.appendChild(document.createElement("br"));
 }
 
-document.getElementById("test-button").addEventListener("click",test);
+document.getElementById("test-button").addEventListener("click",visualise_button);
 
 // Create threejs scene
 
