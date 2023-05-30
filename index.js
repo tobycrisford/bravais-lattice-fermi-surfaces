@@ -4,7 +4,9 @@ import standard_lattices from './standard_lattices.json';
 
 function create_visualisation(poly) {
 
+    let first_time = true;
     if (obj !== null) {
+        first_time = false;
         scene.remove(obj);
     }
 
@@ -45,7 +47,9 @@ function create_visualisation(poly) {
         obj.rotation.y += 0.01;
         renderer.render( scene, camera );
     }
-    animate();
+    if (first_time) {
+        animate();
+    }
 }
 
 function refresh_visualisation() {
