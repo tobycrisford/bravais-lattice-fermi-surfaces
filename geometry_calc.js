@@ -461,3 +461,8 @@ export function polyhedron_to_threejs_geometry(polyhedron, material) {
 
     return shapes;
 }
+
+export function get_fermi_sphere_radius(reciprocal_vectors) {
+    const zone_volume = dot(reciprocal_vectors[0], cross(reciprocal_vectors[1],reciprocal_vectors[2]));
+    return Math.cbrt(zone_volume/(4.0*Math.PI));
+}

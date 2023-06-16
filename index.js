@@ -1,8 +1,8 @@
-import {create_nth_brillouin_zone, reciprocal_lattice, polyhedron_to_threejs_geometry} from "./geometry_calc.js" 
+import {create_nth_brillouin_zone, reciprocal_lattice, polyhedron_to_threejs_geometry, get_fermi_sphere_radius} from "./geometry_calc.js" 
 import * as THREE from 'three';
 import standard_lattices from './standard_lattices.json';
 
-function create_visualisation(poly) {
+function create_visualisation(poly, radius) {
 
     let first_time = true;
     if (obj !== null) {
@@ -41,6 +41,16 @@ function create_visualisation(poly) {
 
     camera.position.z = 5;
 
+    if (sphere !== null && sphere_visible) {
+        scene.remove(sphere);
+    }
+    const sphere_geometry = new THREE.SphereGeometry(radius, 32, 16);
+    const sphere_material = new THREE.MeshLambertMaterial({color: 0x0000FF});
+    sphere = new THREE.Mesh(sphere_geometry, sphere_material);
+    if (sphere_visible) {
+        scene.add(sphere);
+    }
+
     function animate() {
         requestAnimationFrame( animate );
         obj.rotation.x += 0.01;
@@ -49,6 +59,19 @@ function create_visualisation(poly) {
     }
     if (first_time) {
         animate();
+    }
+}
+
+function toggle_sphere() {
+    if (sphere_visible) {
+        scene.remove(sphere);
+        sphere_visible = false;
+    }
+    else {
+        if (sphere !== null) {
+            scene.add(sphere);
+        }
+        sphere_visible = true;
     }
 }
 
@@ -87,6 +110,7 @@ function refresh_visualisation() {
     const zone_number = parseInt(document.getElementById("zone-input").value);
 
     poly = create_nth_brillouin_zone(reciprocal_lattice_vectors, zone_number);
+    const radius = get_fermi_sphere_radius(reciprocal_lattice_vectors);
     console.log("Brillouin zone created");
     create_visualisation(poly);
     console.log("Long function finished");
@@ -159,6 +183,11 @@ zone_select.appendChild(zone_input);
 
 document.getElementById("test-button").addEventListener("click",visualise_button);
 
+const sphere_toggle = document.createElement("input");
+sphere_toggle.setAttribute("type","checkbox");
+document.getElementById("sphere_toggle").appendChild(sphere_toggle);
+sphere_toggle.addEventListener("click", toggle_sphere);
+
 // Create threejs scene
 
 const scene = new THREE.Scene();
@@ -166,5 +195,7 @@ const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.inner
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
-document.body.appendChild( renderer.domElement );
+document.getElementById("output").appendChild( renderer.domElement );
 let obj = null;
+let sphere = null;
+let sphere_visible = false;
