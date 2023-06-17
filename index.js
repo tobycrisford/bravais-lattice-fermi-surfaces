@@ -112,7 +112,7 @@ function refresh_visualisation() {
     poly = create_nth_brillouin_zone(reciprocal_lattice_vectors, zone_number);
     const radius = get_fermi_sphere_radius(reciprocal_lattice_vectors);
     console.log("Brillouin zone created");
-    create_visualisation(poly);
+    create_visualisation(poly, radius);
     console.log("Long function finished");
 }
 
