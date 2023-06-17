@@ -75,8 +75,11 @@ function toggle_sphere() {
     }
 }
 
+const poly_cache = {};
+
 function refresh_visualisation() {
     console.log("Long function called");
+    let cache_key = '';
 
     let reciprocal_lattice_vectors = null;
     const standard_selection = document.getElementById("lattice").value;
@@ -84,7 +87,9 @@ function refresh_visualisation() {
         const prim_vectors = [[],[],[]];
         for (let i = 0;i < 3;i++) {
             for (let j = 0;j < 3;j++) {
-                prim_vectors[i].push(parseFloat(document.getElementById(i.toString() + "_" + j.toString()).value));
+                const val = parseFloat(document.getElementById(i.toString() + "_" + j.toString()).value)
+                prim_vectors[i].push(val);
+                cache_key += val.toString() + ' ';
             }
         }
         reciprocal_lattice_vectors = reciprocal_lattice(prim_vectors);
@@ -108,8 +113,15 @@ function refresh_visualisation() {
     }
 
     const zone_number = parseInt(document.getElementById("zone-input").value);
+    cache_key += ' ' + zone_number.toString()
 
-    poly = create_nth_brillouin_zone(reciprocal_lattice_vectors, zone_number);
+    if (cache_key in poly_cache) {
+        poly = poly_cache[cache_key];
+    }
+    else {
+        poly = create_nth_brillouin_zone(reciprocal_lattice_vectors, zone_number);
+        poly_cache[cache_key] = poly;
+    }
     
     const valence = parseInt(document.getElementById("valence-input").value);
     
