@@ -83,6 +83,7 @@ function refresh_visualisation() {
 
     let reciprocal_lattice_vectors = null;
     const standard_selection = document.getElementById("lattice").value;
+    cache_key += standard_selection + ' ';
     if (standard_selection === "-") {
         const prim_vectors = [[],[],[]];
         for (let i = 0;i < 3;i++) {
