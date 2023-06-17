@@ -110,7 +110,10 @@ function refresh_visualisation() {
     const zone_number = parseInt(document.getElementById("zone-input").value);
 
     poly = create_nth_brillouin_zone(reciprocal_lattice_vectors, zone_number);
-    const radius = get_fermi_sphere_radius(reciprocal_lattice_vectors);
+    
+    const valence = parseInt(document.getElementById("valence-input").value);
+    
+    const radius = get_fermi_sphere_radius(reciprocal_lattice_vectors, valence);
     console.log("Brillouin zone created");
     create_visualisation(poly, radius);
     console.log("Long function finished");
@@ -180,6 +183,12 @@ zone_input.setAttribute("type","text");
 zone_input.setAttribute("id","zone-input");
 zone_input.setAttribute("value","1");
 zone_select.appendChild(zone_input);
+
+const valence = document.createElement("input");
+valence.setAttribute("type","text");
+valence.setAttribute("id","valence-input");
+valence.setAttribute("value","1");
+document.getElementById("valence").appendChild(valence);
 
 document.getElementById("test-button").addEventListener("click",visualise_button);
 
