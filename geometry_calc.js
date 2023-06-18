@@ -205,12 +205,16 @@ function prune_polyhedron(polyhedron) {
     }
 }
 
-function deactivate_external_vertices(polyhedron) {
+function deactivate_external_vertices(polyhedron, zone_number) {
     for (const vertex of polyhedron.vertices) {
+        let plane_count = 0;
         for (const face of polyhedron.faces) {
             if (dot(vertex.v, face.n) > face.a + 10**(-6)) {
-                vertex.active = false;
-                break;
+                plane_count += 1;
+                if (plane_count >= zone_number) {
+                    vertex.active = false;
+                    break;
+                }
             }
         }
     }
@@ -219,7 +223,7 @@ function deactivate_external_vertices(polyhedron) {
 /*
 Add new plane to working polyhedron construction - might leave duplicate vertices
 */
-function add_plane_to_polyhedron(polyhedron, plane) {
+function add_plane_to_polyhedron(polyhedron, plane, zone_number) {
     
     for (const face of polyhedron.faces) {
         let edge = plane_intersection(face, plane);
@@ -240,7 +244,7 @@ function add_plane_to_polyhedron(polyhedron, plane) {
     polyhedron.faces.push(plane);
 
     // Now clean up
-    deactivate_external_vertices(polyhedron);
+    deactivate_external_vertices(polyhedron, zone_number);
     prune_polyhedron(polyhedron);
 }
 
@@ -269,7 +273,7 @@ function compare_faces(face_a, face_b) {
 /*
 Create first brilluoin zone polyhedron given primitive lattice vectors, and faces to exclude
 */
-function create_brillouin_zone(reciprocal_vectors, faces_to_exclude) {
+export function create_nth_brillouin_zone(reciprocal_vectors, zone_number) {
 
     let poly = new polyhedron();
 
@@ -297,16 +301,7 @@ function create_brillouin_zone(reciprocal_vectors, faces_to_exclude) {
 
     // Now build polyhedron
     for (const bragg_plane of bragg_planes) {
-        let exclude = false;
-        for (const exclusion of faces_to_exclude) {
-            if (compare_faces(bragg_plane[0], exclusion)) {
-                exclude = true;
-                break;
-            }
-        }
-        if (!exclude) {
-            add_plane_to_polyhedron(poly, bragg_plane[0]);
-        }
+        add_plane_to_polyhedron(poly, bragg_plane[0], zone_number);
     }
 
     //deactivate_duplicate_vertices(poly);
@@ -320,16 +315,6 @@ function create_brillouin_zone(reciprocal_vectors, faces_to_exclude) {
     prune_polyhedron(poly);
 
     console.log(poly);
-    return poly;
-}
-
-export function create_nth_brillouin_zone(reciprocal_vectors, n) {
-    let faces_to_exclude = [];
-    let poly = null;
-    for (let i = 0;i < n;i++) {
-        poly = create_brillouin_zone(reciprocal_vectors, faces_to_exclude);
-        faces_to_exclude = faces_to_exclude.concat(poly.faces);
-    }
     return poly;
 }
 
