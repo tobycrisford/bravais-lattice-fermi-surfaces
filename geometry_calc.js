@@ -388,13 +388,31 @@ function point_in_loops(point, loops) {
     return false;
 }
 
+function segment_in_segments(segment, segments) {
+    for (const s of segments) {
+        if (dist(segment[0],s.points[0]) < 10**(-6)) {
+            if (dist(segment[1],s.points[1]) < 10**(-6)) {
+                return true;
+            }
+        }
+        else if (dist(segment[0],s.points[1]) < 10**(-6)) {
+            if (dist(segment[1],s.points[0]) < 10**(-6)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 function find_edge_traversals(face) {
 
     let line_segments = [];
     for (const edge of face.edges) {
         const edge_segments = dedupe_edge(edge);
         for (const segment of edge_segments) {
-            line_segments.push({used: false, points: segment});
+            if (!segment_in_segments(segment, line_segments)) {
+                line_segments.push({used: false, points: segment});
+            }
         }
     }
 
