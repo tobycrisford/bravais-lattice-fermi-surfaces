@@ -271,7 +271,7 @@ function compare_faces(face_a, face_b) {
 }
 
 /*
-Create first brilluoin zone polyhedron given primitive lattice vectors, and faces to exclude
+Create nth brilluoin zone polyhedron given primitive lattice vectors, and faces to exclude
 */
 export function create_nth_brillouin_zone(reciprocal_vectors, zone_number) {
 
@@ -318,61 +318,100 @@ export function create_nth_brillouin_zone(reciprocal_vectors, zone_number) {
     return poly;
 }
 
+/*
+Take edge object and return array of constituent edges as point vector pairs, in order they appear along edge
+*/
 function dedupe_edge(edge) {
-    let start_vertex = edge.vertices[0].v;
-    let end_vertex = null;
-    let max_dist = 10**(-6);
-    for (let i = 1;i < edge.vertices.length;i++) {
-        let d = dist(start_vertex, edge.vertices[i].v);
-        if (d > max_dist) {
-            end_vertex = edge.vertices[i].v;
-            max_dist = d;
+    const points = [];
+    for (const vertex of edge.vertices) {
+        const t_val = dot(edge.t, vec_add(vertex.v, scal_mult(-1, edge.a)));
+        points.push({t_val: t_val, point: vertex.v});
+    }
+    points.sort(function(a,b) {a.t_val - b.t_val});
+
+    const point_pairs = [];
+    for (let i = 0;i < points.length - 1;i++) {
+        if (dist(points[i].point,points[i+1].point) > 10**(-6)) {
+            point_pairs.push([points[i].point,points[i+1].point]);
         }
     }
-    if (end_vertex === null) {
-        return null;
-    }
-    return [start_vertex, end_vertex];
 }
 
-function find_edge_traversal(face) {
-    let deduped_edges = [];
-    for (let i = 0;i < face.edges.length;i++) {
-        let deduped_edge = dedupe_edge(face.edges[i]);
-        if (deduped_edge !== null) {
-            deduped_edges.push(deduped_edge);
+/* Given a load of line segments, recursively find all the paths to endpoint, as array of point vectors
+Line segments are objects with 'points' (pair of vectors, start and end), and 'used', boolean indicating whether already traversed
+*/
+function find_paths(point_pairs, path_so_far, current_position, target) {
+    
+    let paths = null;
+    let results = [];
+
+    if (dist(current_position, target) < 10**(-6) && path_so_far.length > 1) {
+        const result = [];
+        for (const p of path_so_far) {
+            result.push(p);
         }
-    }
-    if (deduped_edges.length === 0) {
-        return null;
+        return [result];
     }
 
-    let edge_traversal = [deduped_edges[0][0],deduped_edges[0][1]];
-    while (true) {
-        let added = false;
-        for (let i = 0;i < deduped_edges.length;i++) {
-            for (const j of [0,1]) {
-                if (dist(edge_traversal[edge_traversal.length-1],deduped_edges[i][j]) < 10**(-6)) {
-                    if (dist(edge_traversal[edge_traversal.length-2],deduped_edges[i][1-j]) > 10**(-6)) {
-                        edge_traversal.push(deduped_edges[i][1-j]);
-                        added = true;
-                        break;
+    for (const point_pair of point_pairs) {
+        if (!point_pair.used) {
+            for (let i = 0;i < 1;i++) {
+                if (dist(current_position, point_pair.points[i]) < 10**(-6)) {
+                    path_so_far.append(point_pair.points[1-i]);
+                    point_pair.used = true;
+
+                    paths = find_paths(point_pairs, paths_so_far, point_pair.points[i-1], target);
+                    for (const path of paths) {
+                        results.push(path);
+                    }
+
+                    path_so_far.pop();
+                    point_pair.used = false;
+                }
+            }
+        }
+    }
+
+    return results;
+}
+
+function point_in_loops(point, loops) {
+    for (const loop of loops) {
+        for (const loop_point of loop) {
+            if (dist(point, loop_point) < 10**(-6)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function find_edge_traversals(face) {
+
+    let line_segments = [];
+    for (const edge of face.edges) {
+        const edge_segments = dedupe_edge(edge);
+        for (const segment of edge_segments) {
+            line_segments.push({used: false, points: segment});
+        }
+    }
+
+    const loops = [];
+    for (const segment of line_segments) {
+        for (let i = 0;i < 1;i++) {
+            if (!point_in_loops(segment.points[i],loops)) {
+                const new_loops = find_paths(line_segments, [segment.points[i]], segment.points[i], segment.points[i]);
+                for (const loop of new_loops) {
+                    if (loop.length > 1) {
+                        loops.push(loop);
+                        break; // Should only need to keep 1 loop per point
                     }
                 }
             }
-            if (added) {
-                break;
-            }
-        }
-        if (!added) {
-            return null;
-        }
-        if (dist(edge_traversal[edge_traversal.length-1],edge_traversal[0]) < 10**(-6)) {
-            break;
         }
     }
 
-    return edge_traversal;
+    return loops;
 }
 
 // Turns 3d coordinates for v into 2d coords on face
@@ -398,49 +437,57 @@ function construct_face_basis(face) {
 }
 
 function face_to_threejs_mesh(face, material) {
-    let edge_traversal = find_edge_traversal(face);
+    let edge_traversals = find_edge_traversals(face);
 
-    if (edge_traversal === null) {
+    if (edge_traversals.length === 0) {
         return null;
     }
 
     let face_basis = construct_face_basis(face);
-    let shape_points = [];
-    for (let i = 0;i < edge_traversal.length;i++) {
-        let coords = project_to_plane_coords(face_basis, edge_traversal[i]);
-        shape_points.push(new THREE.Vector2(coords[0],coords[1]));
-    }
-    console.log(edge_traversal);
-    console.log(shape_points);
-    const shape = new THREE.Shape(shape_points);
-    const geometry = new THREE.ShapeGeometry(shape);
-    const mesh = new THREE.Mesh(geometry, material);
-
-    // Shift shape back to 3D coords in right place
-    let translation = scal_mult(face.n, face.a);
-    let mt_elements = [];
-    for (const v of [face_basis[0],face_basis[1],face.n,translation]) {
-        for (let i = 0;i < v.length;i++) {
-            mt_elements.push(v[i]);
+    const meshes = [];
+    for (const edge_traversal of edge_traversals) {
+        
+        let shape_points = [];
+        for (let i = 0;i < edge_traversal.length;i++) {
+            let coords = project_to_plane_coords(face_basis, edge_traversal[i]);
+            shape_points.push(new THREE.Vector2(coords[0],coords[1]));
         }
-        mt_elements.push(0);
+        console.log(edge_traversal);
+        console.log(shape_points);
+        const shape = new THREE.Shape(shape_points);
+        const geometry = new THREE.ShapeGeometry(shape);
+        const mesh = new THREE.Mesh(geometry, material);
+
+        // Shift shape back to 3D coords in right place
+        let translation = scal_mult(face.n, face.a);
+        let mt_elements = [];
+        for (const v of [face_basis[0],face_basis[1],face.n,translation]) {
+            for (let i = 0;i < v.length;i++) {
+                mt_elements.push(v[i]);
+            }
+            mt_elements.push(0);
+        }
+        mt_elements[15] = 1;
+        let mt = new THREE.Matrix4();
+        mt.set(...mt_elements);
+        mt.transpose();
+
+        mesh.applyMatrix4(mt);
+
+        meshes.push(mesh);
     }
-    mt_elements[15] = 1;
-    let mt = new THREE.Matrix4();
-    mt.set(...mt_elements);
-    mt.transpose();
 
-    mesh.applyMatrix4(mt);
-
-    return mesh;
+    return meshes;
 }
 
 export function polyhedron_to_threejs_geometry(polyhedron, material) {
     let shapes = [];
     for (const face of polyhedron.faces) {
-        let face_shape = face_to_threejs_mesh(face, material);
-        if (face_shape !== null) {
-            shapes.push(face_shape);
+        let face_shapes = face_to_threejs_mesh(face, material);
+        if (face_shapes !== null) {
+            for (const shape of face_shapes) {
+                shapes.push(shape);
+            }
         }
     }
 
