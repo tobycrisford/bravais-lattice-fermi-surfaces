@@ -324,7 +324,7 @@ Take edge object and return array of constituent edges as point vector pairs, in
 function dedupe_edge(edge) {
     const points = [];
     for (const vertex of edge.vertices) {
-        const t_val = dot(edge.t, vec_add(vertex.v, scal_mult(-1, edge.a)));
+        const t_val = dot(edge.t, vec_add(vertex.v, scal_mult(edge.a,-1)));
         points.push({t_val: t_val, point: vertex.v});
     }
     points.sort(function(a,b) {a.t_val - b.t_val});
@@ -335,6 +335,8 @@ function dedupe_edge(edge) {
             point_pairs.push([points[i].point,points[i+1].point]);
         }
     }
+
+    return point_pairs;
 }
 
 /* Given a load of line segments, recursively find all the paths to endpoint, as array of point vectors
@@ -355,12 +357,12 @@ function find_paths(point_pairs, path_so_far, current_position, target) {
 
     for (const point_pair of point_pairs) {
         if (!point_pair.used) {
-            for (let i = 0;i < 1;i++) {
+            for (let i = 0;i < 2;i++) {
                 if (dist(current_position, point_pair.points[i]) < 10**(-6)) {
-                    path_so_far.append(point_pair.points[1-i]);
+                    path_so_far.push(point_pair.points[1-i]);
                     point_pair.used = true;
 
-                    paths = find_paths(point_pairs, paths_so_far, point_pair.points[i-1], target);
+                    paths = find_paths(point_pairs, path_so_far, point_pair.points[1-i], target);
                     for (const path of paths) {
                         results.push(path);
                     }
@@ -398,7 +400,7 @@ function find_edge_traversals(face) {
 
     const loops = [];
     for (const segment of line_segments) {
-        for (let i = 0;i < 1;i++) {
+        for (let i = 0;i < 2;i++) {
             if (!point_in_loops(segment.points[i],loops)) {
                 const new_loops = find_paths(line_segments, [segment.points[i]], segment.points[i], segment.points[i]);
                 for (const loop of new_loops) {
