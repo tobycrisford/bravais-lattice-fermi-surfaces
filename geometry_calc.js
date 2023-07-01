@@ -166,10 +166,11 @@ function check_active(sub_components) {
     return true; // If no sub-components, want to keep it
 }
 
-function polyhedron() {
+function polyhedron(zone_number) {
     this.faces = [];
     this.edges = [];
     this.vertices = [];
+    this.zone_number = zone_number;
 }
 
 /*
@@ -205,13 +206,13 @@ function prune_polyhedron(polyhedron) {
     }
 }
 
-function deactivate_external_vertices(polyhedron, zone_number) {
+function deactivate_external_vertices(polyhedron) {
     for (const vertex of polyhedron.vertices) {
         let plane_count = 0;
         for (const face of polyhedron.faces) {
             if (dot(vertex.v, face.n) > face.a + 10**(-6)) {
                 plane_count += 1;
-                if (plane_count >= zone_number) {
+                if (plane_count >= polyhedron.zone_number) {
                     vertex.active = false;
                     break;
                 }
@@ -223,7 +224,7 @@ function deactivate_external_vertices(polyhedron, zone_number) {
 /*
 Add new plane to working polyhedron construction - might leave duplicate vertices
 */
-function add_plane_to_polyhedron(polyhedron, plane, zone_number) {
+function add_plane_to_polyhedron(polyhedron, plane) {
     
     for (const face of polyhedron.faces) {
         let edge = plane_intersection(face, plane);
@@ -244,7 +245,7 @@ function add_plane_to_polyhedron(polyhedron, plane, zone_number) {
     polyhedron.faces.push(plane);
 
     // Now clean up
-    deactivate_external_vertices(polyhedron, zone_number);
+    deactivate_external_vertices(polyhedron);
     prune_polyhedron(polyhedron);
 }
 
@@ -275,7 +276,7 @@ Create nth brilluoin zone polyhedron given primitive lattice vectors, and faces 
 */
 export function create_nth_brillouin_zone(reciprocal_vectors, zone_number) {
 
-    let poly = new polyhedron();
+    let poly = new polyhedron(zone_number);
 
     // Should have proper way of figuring out how many reciprocal lattice vectors i need to look at
     // but for now just try this fairly brute force way that should normally work
@@ -301,7 +302,7 @@ export function create_nth_brillouin_zone(reciprocal_vectors, zone_number) {
 
     // Now build polyhedron
     for (const bragg_plane of bragg_planes) {
-        add_plane_to_polyhedron(poly, bragg_plane[0], zone_number);
+        add_plane_to_polyhedron(poly, bragg_plane[0]);
     }
 
     //deactivate_duplicate_vertices(poly);
@@ -404,14 +405,37 @@ function segment_in_segments(segment, segments) {
     return false;
 }
 
-function find_edge_traversals(face) {
+function find_midpoint(a, b) {
+    return scal_mult(vec_add(a,b),0.5);
+}
+
+function segment_in_zone(segment, polyhedron) {
+    const midpoint = find_midpoint(segment[0],segment[1]);
+    let plane_count = 0;
+    for (const face of polyhedron.faces) {
+        if (dot(midpoint, face.n) > face.a + 10**(-6)) {
+            plane_count += 1;
+            if (plane_count >= polyhedron.zone_number) {
+                console.log(plane_count);
+                return false;
+            }
+        }
+    }
+    console.log(plane_count);
+    //return true;
+    return plane_count == polyhedron.zone_number - 1;
+}
+
+function find_edge_traversals(face, poly) {
 
     let line_segments = [];
     for (const edge of face.edges) {
         const edge_segments = dedupe_edge(edge);
         for (const segment of edge_segments) {
             if (!segment_in_segments(segment, line_segments)) {
-                line_segments.push({used: false, points: segment});
+                if (segment_in_zone(segment, poly)) {
+                    line_segments.push({used: false, points: segment});
+                }
             }
         }
     }
@@ -424,7 +448,7 @@ function find_edge_traversals(face) {
                 for (const loop of new_loops) {
                     if (loop.length > 1) {
                         loops.push(loop);
-                        break; // Should only need to keep 1 loop per point
+                        //break; // Should only need to keep 1 loop per point
                     }
                 }
             }
@@ -456,8 +480,8 @@ function construct_face_basis(face) {
     return face_basis;
 }
 
-function face_to_threejs_mesh(face, material) {
-    let edge_traversals = find_edge_traversals(face);
+function face_to_threejs_mesh(face, poly, material) {
+    let edge_traversals = find_edge_traversals(face, poly);
 
     if (edge_traversals.length === 0) {
         return null;
@@ -472,8 +496,6 @@ function face_to_threejs_mesh(face, material) {
             let coords = project_to_plane_coords(face_basis, edge_traversal[i]);
             shape_points.push(new THREE.Vector2(coords[0],coords[1]));
         }
-        console.log(edge_traversal);
-        console.log(shape_points);
         const shape = new THREE.Shape(shape_points);
         const geometry = new THREE.ShapeGeometry(shape);
         const mesh = new THREE.Mesh(geometry, material);
@@ -503,7 +525,7 @@ function face_to_threejs_mesh(face, material) {
 export function polyhedron_to_threejs_geometry(polyhedron, material) {
     let shapes = [];
     for (const face of polyhedron.faces) {
-        let face_shapes = face_to_threejs_mesh(face, material);
+        let face_shapes = face_to_threejs_mesh(face, polyhedron, material);
         if (face_shapes !== null) {
             for (const shape of face_shapes) {
                 shapes.push(shape);
