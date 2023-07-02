@@ -422,8 +422,8 @@ function segment_in_zone(segment, polyhedron) {
         }
     }
     console.log(plane_count);
-    //return true;
-    return plane_count == polyhedron.zone_number - 1;
+    return true;
+    //return plane_count == polyhedron.zone_number - 1;
 }
 
 function find_edge_traversals(face, poly) {
