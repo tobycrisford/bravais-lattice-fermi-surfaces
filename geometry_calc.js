@@ -319,8 +319,24 @@ export function create_nth_brillouin_zone(reciprocal_vectors, zone_number) {
     return poly;
 }
 
+function line_segment(a, b) {
+    this.a = new segment_end(a);
+    this.b = new segment_end(b);
+    this.v = vec_add(b, scal_mult(a, -1));
+}
+
+function segment_end(v) {
+    this.v = v;
+    this.start_of_segments = [];
+    this.end_of_segments = [];
+}
+
+function add_segment(a, b, existing_segments, existing_endpoints) {
+// Adds new segment, and its endpoints, ensuring uniqueness of segments and endpoints in the two lists
+}
+
 /*
-Take edge object and return array of constituent edges as point vector pairs, in order they appear along edge
+Take edge object and return array of line segments, in order they appear along edge
 */
 function dedupe_edge(edge) {
     const points = [];
@@ -330,14 +346,14 @@ function dedupe_edge(edge) {
     }
     points.sort(function(a,b) {a.t_val - b.t_val});
 
-    const point_pairs = [];
+    const segments = [];
     for (let i = 0;i < points.length - 1;i++) {
         if (dist(points[i].point,points[i+1].point) > 10**(-6)) {
-            point_pairs.push([points[i].point,points[i+1].point]);
+            ...
         }
     }
 
-    return point_pairs;
+    return segments;
 }
 
 /* Given a load of line segments, recursively find all the paths to endpoint, as array of point vectors
