@@ -320,25 +320,54 @@ export function create_nth_brillouin_zone(reciprocal_vectors, zone_number) {
 }
 
 function line_segment(a, b) {
-    this.a = new segment_end(a);
-    this.b = new segment_end(b);
-    this.v = vec_add(b, scal_mult(a, -1));
+    this.a = a
+    this.b = b
+    this.v = vec_add(b.v, scal_mult(a.v, -1));
 }
 
-function segment_end(v) {
+function segment_endpoint(v) {
     this.v = v;
     this.start_of_segments = [];
     this.end_of_segments = [];
 }
 
+function add_endpoint(v, endpoints) {
+    for (const endpoint of endpoints) {
+        if (dist(v, endpoint) < 10**(-6)) {
+            return endpoint;
+        }
+    }
+    const new_endpoint = new segment_endpoint(v);
+    endpoints.push(new_endpoint);
+    return new_endpoint;
+}
+
 function add_segment(a, b, existing_segments, existing_endpoints) {
-// Adds new segment, and its endpoints, ensuring uniqueness of segments and endpoints in the two lists
+    // Adds new segment, and its endpoints, ensuring uniqueness of segments and endpoints in the two lists
+
+    const endpoints = [add_endpoint(a, existing_endpoints), add_endpoint(b, existing_endpoints)];
+    
+    for (const segment of endpoints[0].start_of_segments) {
+        if (segment.b === endpoints[1]) {
+            return;
+        }
+    }
+    for (const segment of endpoints[0].end_of_segments) {
+        if (segment.a === endpoints[1]) {
+            return;
+        }
+    }
+
+    const new_segment = new line_segment(endpoints[0], endpoints[1]);
+    endpoints[0].start_of_segments.push(new_segment);
+    endpoints[1].end_of_segments.push(new_segment);
+    existing_segments.push(new_segment);
 }
 
 /*
-Take edge object and return array of line segments, in order they appear along edge
+Take edge object and add to line segment data structure
 */
-function dedupe_edge(edge) {
+function add_edge(edge, segments, endpoints) {
     const points = [];
     for (const vertex of edge.vertices) {
         const t_val = dot(edge.t, vec_add(vertex.v, scal_mult(edge.a,-1)));
@@ -346,14 +375,12 @@ function dedupe_edge(edge) {
     }
     points.sort(function(a,b) {a.t_val - b.t_val});
 
-    const segments = [];
     for (let i = 0;i < points.length - 1;i++) {
         if (dist(points[i].point,points[i+1].point) > 10**(-6)) {
-            ...
+            add_segment(points[i].point, points[i+1].point, segments, endpoints);
         }
     }
 
-    return segments;
 }
 
 /* Given a load of line segments, recursively find all the paths to endpoint, as array of point vectors
