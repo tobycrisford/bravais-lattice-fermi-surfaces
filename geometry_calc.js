@@ -383,43 +383,68 @@ function add_edge(edge, segments, endpoints) {
 
 }
 
-/* Given a load of line segments, recursively find all the paths to endpoint, as array of point vectors
-Line segments are objects with 'points' (pair of vectors, start and end), and 'used', boolean indicating whether already traversed
-*/
-function find_paths(point_pairs, path_so_far, current_position, target) {
-    
-    let paths = null;
-    let results = [];
+// Find the interior angle in a polygon formed by going along a then b
+function find_angle(a, b) {
+    ...
+}
 
-    if (dist(current_position, target) < 10**(-6) && path_so_far.length > 1) {
-        const result = [];
-        for (const p of path_so_far) {
-            result.push(p);
+// Create an anti-clockwise loop starting from given line segment
+function create_loop(segment) {
+    let current_segment = segment;
+    let reversed = false;
+    const loop = [segment];
+    while (true) {
+        current_segment.visited = true;
+        let current_vertex = null;
+        let v = null;
+        if (reversed) {
+            current_vertex = current_segment.a;
+            v = scal_mult(current_segment.v, -1);
         }
-        return [result];
-    }
-
-    for (const point_pair of point_pairs) {
-        if (!point_pair.used) {
-            for (let i = 0;i < 2;i++) {
-                if (dist(current_position, point_pair.points[i]) < 10**(-6)) {
-                    path_so_far.push(point_pair.points[1-i]);
-                    point_pair.used = true;
-
-                    paths = find_paths(point_pairs, path_so_far, point_pair.points[1-i], target);
-                    for (const path of paths) {
-                        results.push(path);
-                    }
-
-                    path_so_far.pop();
-                    point_pair.used = false;
-                }
+        else {
+            current_vertex = current_segment.b;
+            v = current_segment.v
+        }
+        
+        let best_option = null;
+        let best_angle = 360;
+        for (const seg of current_vertex.start_of_segments) {
+            const angle = find_angle(v, seg.v);
+            if (angle < best_angle) {
+                best_option = {seg: seg, reversed: false};
+                best_angle = angle;
             }
         }
+        for (const seg of current_vertex.end_of_segments) {
+            const angle = find_angle(v, scal_mult(seg.v,-1));
+            if (angle < best_angle) {
+                best_option = {seg: seg, reversed: true};
+                best_angle = angle;
+            }
+        }
+
+        if (best_option.seg === segment) {
+            break;
+        }
+        loop.push(best_option.seg);
+        current_segment = best_option.seg;
+        reversed = best_option.reversed;
     }
 
-    return results;
+    return loop;
 }
+
+// Given a line segments data structure, find all the shapes required to fill it in.
+function find_paths(segments, normal) {
+    const paths = [];
+    for (const segment of segments) {
+        if (segment.visited === undefined) {
+            paths.push(create_loop(segment, segments));
+        }
+    }
+    return paths;
+}
+
 
 function point_in_loops(point, loops) {
     for (const loop of loops) {
