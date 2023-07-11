@@ -423,7 +423,7 @@ function create_loop(segment) {
             }
         }
 
-        if (best_option.seg === segment) {
+        if (best_option.seg === segment && (!best_option.reversed)) {
             break;
         }
         loop.push(best_option.seg);
