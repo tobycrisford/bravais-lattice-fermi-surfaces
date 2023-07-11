@@ -383,13 +383,19 @@ function add_edge(edge, segments, endpoints) {
 
 }
 
-// Find the interior angle in a polygon formed by going along a then b
-function find_angle(a, b) {
-    ...
+// Find the angle formed by going along a then b
+function find_angle(a, b, normal) {
+    let angle = Math.acos(dot(scal_mult(a, -1), b) / Math.sqrt(dot(a,a) * dot(b,b)));
+    const handed_check = dot(normal, cross(a, b)) > 10**(-6);
+    // When a,b parallel, important to return large angle to penalise this choice
+    if (!handed_check) {
+        angle = 2 * Math.PI - angle
+    }
+    return angle;
 }
 
 // Create an anti-clockwise loop starting from given line segment
-function create_loop(segment) {
+function create_loop(segment, normal) {
     let current_segment = segment;
     let reversed = false;
     const loop = [segment];
@@ -407,16 +413,16 @@ function create_loop(segment) {
         }
         
         let best_option = null;
-        let best_angle = 360;
+        let best_angle = 2.0 * Math.PI + 1;
         for (const seg of current_vertex.start_of_segments) {
-            const angle = find_angle(v, seg.v);
+            const angle = find_angle(v, seg.v, normal);
             if (angle < best_angle) {
                 best_option = {seg: seg, reversed: false};
                 best_angle = angle;
             }
         }
         for (const seg of current_vertex.end_of_segments) {
-            const angle = find_angle(v, scal_mult(seg.v,-1));
+            const angle = find_angle(v, scal_mult(seg.v,-1), normal);
             if (angle < best_angle) {
                 best_option = {seg: seg, reversed: true};
                 best_angle = angle;
@@ -439,7 +445,7 @@ function find_paths(segments, normal) {
     const paths = [];
     for (const segment of segments) {
         if (segment.visited === undefined) {
-            paths.push(create_loop(segment, segments));
+            paths.push(create_loop(segment, normal));
         }
     }
     return paths;
