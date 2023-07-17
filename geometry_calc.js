@@ -367,7 +367,7 @@ function add_segment(a, b, existing_segments, existing_endpoints) {
 /*
 Take edge object and add to line segment data structure
 */
-function add_edge(edge, segments, endpoints) {
+function add_edge(edge, segments, endpoints, polyhedron) {
     const points = [];
     for (const vertex of edge.vertices) {
         const t_val = dot(edge.t, vec_add(vertex.v, scal_mult(edge.a,-1)));
@@ -377,7 +377,9 @@ function add_edge(edge, segments, endpoints) {
 
     for (let i = 0;i < points.length - 1;i++) {
         if (dist(points[i].point,points[i+1].point) > 10**(-6)) {
-            add_segment(points[i].point, points[i+1].point, segments, endpoints);
+            if (segment_in_zone(points[i].point, points[i+1].point, polyhedron)) {
+                add_segment(points[i].point, points[i+1].point, segments, endpoints);
+            }
         }
     }
 
@@ -398,7 +400,7 @@ function find_angle(a, b, normal) {
 function create_loop(segment, normal) {
     let current_segment = segment;
     let reversed = false;
-    const loop = [segment];
+    const loop = [segment.a,segment.b];
     while (true) {
         current_segment.visited = true;
         let current_vertex = null;
@@ -432,7 +434,12 @@ function create_loop(segment, normal) {
         if (best_option.seg === segment && (!best_option.reversed)) {
             break;
         }
-        loop.push(best_option.seg);
+        if (!best_option.reversed) {
+            loop.push(best_option.seg.b);
+        }
+        else {
+            loop.push(best_option.seg.a);
+        }
         current_segment = best_option.seg;
         reversed = best_option.reversed;
     }
@@ -451,40 +458,12 @@ function find_paths(segments, normal) {
     return paths;
 }
 
-
-function point_in_loops(point, loops) {
-    for (const loop of loops) {
-        for (const loop_point of loop) {
-            if (dist(point, loop_point) < 10**(-6)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-function segment_in_segments(segment, segments) {
-    for (const s of segments) {
-        if (dist(segment[0],s.points[0]) < 10**(-6)) {
-            if (dist(segment[1],s.points[1]) < 10**(-6)) {
-                return true;
-            }
-        }
-        else if (dist(segment[0],s.points[1]) < 10**(-6)) {
-            if (dist(segment[1],s.points[0]) < 10**(-6)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 function find_midpoint(a, b) {
     return scal_mult(vec_add(a,b),0.5);
 }
 
-function segment_in_zone(segment, polyhedron) {
-    const midpoint = find_midpoint(segment[0],segment[1]);
+function segment_in_zone(start, end, polyhedron) {
+    const midpoint = find_midpoint(start,end);
     let plane_count = 0;
     for (const face of polyhedron.faces) {
         if (dot(midpoint, face.n) > face.a + 10**(-6)) {
@@ -502,32 +481,13 @@ function segment_in_zone(segment, polyhedron) {
 
 function find_edge_traversals(face, poly) {
 
-    let line_segments = [];
+    const segments = [];
+    const endpoints = [];
     for (const edge of face.edges) {
-        const edge_segments = dedupe_edge(edge);
-        for (const segment of edge_segments) {
-            if (!segment_in_segments(segment, line_segments)) {
-                if (segment_in_zone(segment, poly)) {
-                    line_segments.push({used: false, points: segment});
-                }
-            }
-        }
+        add_edge(edge, segments, endpoints, poly);
     }
 
-    const loops = [];
-    for (const segment of line_segments) {
-        for (let i = 0;i < 2;i++) {
-            if (!point_in_loops(segment.points[i],loops)) {
-                const new_loops = find_paths(line_segments, [segment.points[i]], segment.points[i], segment.points[i]);
-                for (const loop of new_loops) {
-                    if (loop.length > 1) {
-                        loops.push(loop);
-                        //break; // Should only need to keep 1 loop per point
-                    }
-                }
-            }
-        }
-    }
+    const loops = find_paths(segments, face.n);
 
     return loops;
 }
