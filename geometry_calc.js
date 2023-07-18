@@ -373,7 +373,7 @@ function add_edge(edge, segments, endpoints, polyhedron) {
         const t_val = dot(edge.t, vec_add(vertex.v, scal_mult(edge.a,-1)));
         points.push({t_val: t_val, point: vertex.v});
     }
-    points.sort(function(a,b) {a.t_val - b.t_val});
+    points.sort(function(a,b) {return a.t_val - b.t_val});
 
     for (let i = 0;i < points.length - 1;i++) {
         if (dist(points[i].point,points[i+1].point) > 10**(-6)) {
