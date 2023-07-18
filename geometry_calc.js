@@ -333,7 +333,7 @@ function segment_endpoint(v) {
 
 function add_endpoint(v, endpoints) {
     for (const endpoint of endpoints) {
-        if (dist(v, endpoint) < 10**(-6)) {
+        if (dist(v, endpoint.v) < 10**(-6)) {
             return endpoint;
         }
     }
@@ -400,7 +400,7 @@ function find_angle(a, b, normal) {
 function create_loop(segment, normal) {
     let current_segment = segment;
     let reversed = false;
-    const loop = [segment.a,segment.b];
+    const loop = [segment.a.v,segment.b.v];
     while (true) {
         current_segment.visited = true;
         let current_vertex = null;
@@ -435,10 +435,10 @@ function create_loop(segment, normal) {
             break;
         }
         if (!best_option.reversed) {
-            loop.push(best_option.seg.b);
+            loop.push(best_option.seg.b.v);
         }
         else {
-            loop.push(best_option.seg.a);
+            loop.push(best_option.seg.a.v);
         }
         current_segment = best_option.seg;
         reversed = best_option.reversed;
@@ -469,14 +469,11 @@ function segment_in_zone(start, end, polyhedron) {
         if (dot(midpoint, face.n) > face.a + 10**(-6)) {
             plane_count += 1;
             if (plane_count >= polyhedron.zone_number) {
-                console.log(plane_count);
                 return false;
             }
         }
     }
-    console.log(plane_count);
     return true;
-    //return plane_count == polyhedron.zone_number - 1;
 }
 
 function find_edge_traversals(face, poly) {
