@@ -484,6 +484,10 @@ function find_edge_traversals(face, poly) {
         add_edge(edge, segments, endpoints, poly);
     }
 
+    if (segments.length < 3) {
+        return [];
+    }
+
     const loops = find_paths(segments, face.n);
 
     return loops;
