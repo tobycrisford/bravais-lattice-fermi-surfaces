@@ -401,6 +401,7 @@ function create_loop(segment, normal) {
     let current_segment = segment;
     let reversed = false;
     const loop = [segment.a.v,segment.b.v];
+    const loop_segments = [segment];
     while (true) {
         if (loop[loop.length - 1] === loop[0]) {
             break;
@@ -450,11 +451,12 @@ function create_loop(segment, normal) {
         else {
             loop.push(best_option.seg.a.v);
         }
+        loop_segments.push(best_option.seg);
         current_segment = best_option.seg;
         reversed = best_option.reversed;
     }
 
-    return loop;
+    return {loop: loop, loop_segments: loop_segments};
 }
 
 // Given a line segments data structure, find all the shapes required to fill it in.
@@ -466,10 +468,10 @@ function find_paths(segments, normal) {
             if (new_loop === null) {
                 continue;
             }
-            for (loop_segment of new_loop) {
+            for (loop_segment of new_loop.loop_segments) {
                 loop_segment.visited = true;
             }
-            paths.push(new_loop);
+            paths.push(new_loop.loop);
         }
     }
     return paths;
