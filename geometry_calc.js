@@ -402,6 +402,9 @@ function create_loop(segment, normal) {
     let reversed = false;
     const loop = [segment.a.v,segment.b.v];
     while (true) {
+        if (loop[loop.length - 1] === loop[0]) {
+            break;
+        }
         current_segment.active_loop = segment;
         let current_vertex = null;
         let v = null;
