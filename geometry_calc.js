@@ -402,7 +402,7 @@ function create_loop(segment, normal) {
     let reversed = false;
     const loop = [segment.a.v,segment.b.v];
     while (true) {
-        current_segment.visited = true;
+        current_segment.active_loop = segment;
         let current_vertex = null;
         let v = null;
         if (reversed) {
@@ -434,6 +434,13 @@ function create_loop(segment, normal) {
         if (best_option.seg === segment && (!best_option.reversed)) {
             break;
         }
+
+        if ('active_loop' in best_option.seg) {
+            if (best_option.seg.active_loop === segment) {
+                return null; // Creating a bad loop here
+            }
+        }
+
         if (!best_option.reversed) {
             loop.push(best_option.seg.b.v);
         }
@@ -452,7 +459,14 @@ function find_paths(segments, normal) {
     const paths = [];
     for (const segment of segments) {
         if (segment.visited === undefined) {
-            paths.push(create_loop(segment, normal));
+            const new_loop = create_loop(segment, normal);
+            if (new_loop === null) {
+                continue;
+            }
+            for (loop_segment of new_loop) {
+                loop_segment.visited = true;
+            }
+            paths.push(new_loop);
         }
     }
     return paths;
