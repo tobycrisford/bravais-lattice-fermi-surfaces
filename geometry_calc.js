@@ -280,7 +280,7 @@ export function create_nth_brillouin_zone(reciprocal_vectors, zone_number) {
 
     // Should have proper way of figuring out how many reciprocal lattice vectors i need to look at
     // but for now just try this fairly brute force way that should normally work
-    const check_limit = 10;
+    let check_limit = 3;
     let bragg_planes = [];
     for (let i = -check_limit;i < check_limit+1;i++) {
         for (let j = -check_limit;j < check_limit+1;j++) {
@@ -299,10 +299,6 @@ export function create_nth_brillouin_zone(reciprocal_vectors, zone_number) {
     // Now sort bragg planes by distance for efficient polyhedron construction,
     // and to make sure pruning works correctly.
     bragg_planes.sort(function(a,b){return a[1] - b[1]});
-
-    const use_limit = (2 * zone_number + 1)**3 - 1
-    bragg_planes = bragg_planes.slice(0, use_limit);
-
 
     // Now build polyhedron
     for (const bragg_plane of bragg_planes) {
