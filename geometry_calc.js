@@ -534,8 +534,70 @@ function construct_face_basis(face) {
     return face_basis;
 }
 
+function compare_edge_traversals(trav_a, trav_b) {
+    if (trav_a.length !== trav_b.length) {
+        return false;
+    }
+    if (trav_a.length === 0 && trav_b.length === 0) {
+        return true;
+    }
+    const i = 0;
+    for (let j = 0;j < trav_b.length - 1;j++) {
+        if (dist(trav_a[i],trav_b[j]) > 10**(-6)) {
+            continue;
+        }
+        let match = true;
+        for (let k = 0;k < trav_a.length - 1;k++) {
+            if (dist(trav_a[(i+k) % (trav_a.length - 1)],trav_b[(j+k) % (trav_b.length - 1)]) > 10**(-6)) {
+                match = false;
+                break;
+            }
+        }
+        if (match) {
+            return true;
+        }
+    }
+}
+
 function face_to_threejs_mesh(face, poly, material) {
     let edge_traversals = find_edge_traversals(face, poly);
+
+    console.log("Running check...");
+    for (const f of poly.faces) {
+        if (Math.abs(dot(f.n, face.n) + 1) < 10**(-6) && Math.abs(f.a - face.a) < 10**(-6)) {
+
+            let edge_traversal_comparison = find_edge_traversals(f, poly);
+
+            console.log("Checking reflected face...");
+            
+            if (edge_traversals.length != edge_traversal_comparison.length) {
+                console.log("-----");
+                console.log(f);
+                console.log(face);
+                console.log(edge_traversals);
+                console.log(edge_traversal_comparison);
+                console.log("-----");
+            }
+
+            for (const edge_traversal of edge_traversals) {
+                let found_match = false;
+                for (const comparison of edge_traversal_comparison) {
+                    if (comparison.length === edge_traversal.length) {
+                        found_match = true;
+                        break;
+                    }
+                }
+                if (!found_match) {
+                    console.log("-----");
+                    console.log(f);
+                    console.log(face);
+                    console.log(edge_traversals);
+                    console.log(edge_traversal_comparison);
+                    console.log("-----");
+                }
+            }
+        }
+    }
 
     if (edge_traversals.length === 0) {
         return null;
@@ -577,14 +639,70 @@ function face_to_threejs_mesh(face, poly, material) {
 }
 
 export function polyhedron_to_threejs_geometry(polyhedron, material) {
+
     let shapes = [];
+    let edge_traversals = [];
     for (const face of polyhedron.faces) {
+        for (const edge_traversal of find_edge_traversals(face, polyhedron)) {
+            edge_traversals.push([face, edge_traversal]);
+        }
         let face_shapes = face_to_threejs_mesh(face, polyhedron, material);
         if (face_shapes !== null) {
             for (const shape of face_shapes) {
                 shapes.push(shape);
             }
         }
+    }
+
+    test_a = [[1,0,0],[0,1,0],[0,0,1],[1,0,0]];
+    test_b = [[0,1,0],[0,0,1],[1,0,0],[0,1,0]];
+    if (!compare_edge_traversals(test_a,test_b)) {
+        throw new Exception("Broken compare fn");
+    }
+    console.log("Function checked");
+
+    for (const edge_traversal of edge_traversals) {
+        const reflected_edge_traversal = [];
+        for (const v of edge_traversal[1]) {
+            reflected_edge_traversal.push(scal_mult(v, -1));
+        }
+        let match = false;
+        for (const comparison of edge_traversals) {
+            if (compare_edge_traversals(reflected_edge_traversal, comparison[1])) {
+                match = true;
+                break;
+            }
+            reflected_edge_traversal.reverse();
+            if (compare_edge_traversals(reflected_edge_traversal, comparison[1])) {
+                match = true;
+                break;
+            }
+        }
+        if (!match) {
+            console.log("Edge traversal missing partner!");
+            console.log(edge_traversal);
+            for (const face of polyhedron.faces) {
+                if (dist(scal_mult(face.n,-1), edge_traversal[0].n) < 10**(-6) && Math.abs(face.a - edge_traversal[0].a) < 10**(-6)) {
+                    console.log(face);
+                    console.log("This face traversals...");
+                    for (const edge_traversal_b of edge_traversals) {
+                        if (edge_traversal_b[0] === edge_traversal[0]) {
+                            console.log(edge_traversal_b);
+                        }
+                    }
+                    console.log("Reflected face traversals...");
+                    for (const edge_traversal_b of edge_traversals) {
+                        if (edge_traversal_b[0] === face) {
+                            console.log(edge_traversal_b);
+                        }
+                    }
+                }
+            }
+        }
+        //if (match) {
+        //    console.log("Edge traversal found partner!");
+        //    console.log(edge_traversal);
+        //}
     }
 
     return shapes;
