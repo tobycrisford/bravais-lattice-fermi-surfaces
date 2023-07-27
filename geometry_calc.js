@@ -397,11 +397,17 @@ function find_angle(a, b, normal) {
 }
 
 // Create an anti-clockwise loop starting from given line segment
-function create_loop(segment, normal) {
+function create_loop(segment, normal, initial_reversed) {
     let current_segment = segment;
-    let reversed = false;
-    const loop = [segment.a.v,segment.b.v];
-    const loop_segments = [segment];
+    let reversed = initial_reversed;
+    let loop = [];
+    if (reversed) {
+        loop = [segment.b.v, segment.a.v];
+    }
+    else {
+        loop = [segment.a.v, segment.b.v];
+    }
+    const loop_segments = [{seg: segment, reversed: initial_reversed}];
     while (true) {
         if (loop[loop.length - 1] === loop[0]) {
             break;
@@ -435,10 +441,6 @@ function create_loop(segment, normal) {
             }
         }
 
-        if (best_option.seg === segment && (!best_option.reversed)) {
-            break;
-        }
-
         if ('active_loop' in best_option.seg) {
             if (best_option.seg.active_loop === segment) {
                 return null; // Creating a bad loop here
@@ -451,7 +453,7 @@ function create_loop(segment, normal) {
         else {
             loop.push(best_option.seg.a.v);
         }
-        loop_segments.push(best_option.seg);
+        loop_segments.push(best_option);
         current_segment = best_option.seg;
         reversed = best_option.reversed;
     }
@@ -464,14 +466,32 @@ function find_paths(segments, normal) {
     const paths = [];
     for (const segment of segments) {
         if (segment.visited === undefined) {
-            const new_loop = create_loop(segment, normal);
-            if (new_loop === null) {
+            segment.visited = [false, false]; // Need to include each segment aligned and reversed
+        }
+        const new_loops = [null, null];
+        if (!segment.visited[0]) {
+            new_loops[0] = create_loop(segment, normal, false);
+        }
+        if (!segment.visited[1]) {
+            new_loops[1] = create_loop(segment, normal, true);
+        }
+        for (let i = 0;i < 2;i++) {
+            if (new_loops[i] === null) {
                 continue;
             }
-            for (loop_segment of new_loop.loop_segments) {
-                loop_segment.visited = true;
+            for (loop_segment of new_loops[i].loop_segments) {
+                console.log(new_loops[i].loop_segments);
+                if (loop_segment.seg.visited === undefined) {
+                    loop_segment.seg.visited = [false, false];
+                }
+                if (loop_segment.reversed) {
+                    loop_segment.seg.visited[1] = true;
+                }
+                else {
+                    loop_segment.seg.visited[0] = true;
+                }
             }
-            paths.push(new_loop.loop);
+            paths.push(new_loops[i].loop);
         }
     }
     return paths;
