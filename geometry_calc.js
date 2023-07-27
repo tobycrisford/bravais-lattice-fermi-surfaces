@@ -280,7 +280,10 @@ export function create_nth_brillouin_zone(reciprocal_vectors, zone_number) {
 
     // Should have proper way of figuring out how many reciprocal lattice vectors i need to look at
     // but for now just try this fairly brute force way that should normally work
-    let check_limit = 3;
+    if (zone_number > 3) {
+        throw new Exception("Zone numbers above 3 not currently implemented - would require too high check limit and hit computation problems");
+    }
+    let check_limit = Math.min(zone_number + 1, 3); // Be a bit less careful in the '3' case so we can still get some outputs in reasonable time
     let bragg_planes = [];
     for (let i = -check_limit;i < check_limit+1;i++) {
         for (let j = -check_limit;j < check_limit+1;j++) {

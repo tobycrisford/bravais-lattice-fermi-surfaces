@@ -191,10 +191,12 @@ for (let i = 0;i < 3;i++) {
     form_element.appendChild(document.createElement("br"));
 }
 const zone_select = document.getElementById("zone-number");
-const zone_input = document.createElement("input");
-zone_input.setAttribute("type","text");
+const zone_input = document.createElement("select");
+zone_input.setAttribute("name","zone-input");
 zone_input.setAttribute("id","zone-input");
-zone_input.setAttribute("value","1");
+for (let i = 1;i <= 3;i++) {
+    add_option(zone_input, i.toString());
+}
 zone_select.appendChild(zone_input);
 
 const valence = document.createElement("input");
