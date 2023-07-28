@@ -1,6 +1,10 @@
 import { det, lusolve } from 'mathjs';
 import * as THREE from 'three';
 
+function approx_equal(a,b) {
+    return Math.abs(a - b) < 10**(-6);
+}
+
 function dot(a,b) {
     if (a.length != b.length) {
         throw new Error("Trying to dot product vectors of different lengths");
@@ -45,6 +49,10 @@ function dist(a,b) {
     return Math.sqrt(dot(diff, diff));
 }
 
+function vectors_approx_equal(a,b) {
+    return dist(a,b) < 10**(-6);
+}
+
 /*
 Return primitive vectors for reciprocal lattice given primitive vectors for lattice
 (we factorize out the 2pi scaling for numerical simplicity)
@@ -77,7 +85,7 @@ function plane_intersection(plane_a, plane_b) {
     
     let tangent = cross(plane_a.n, plane_b.n);
     let tangent_length = Math.sqrt(dot(tangent, tangent));
-    if (Math.abs(tangent_length) < 10**(-6)) {
+    if (approx_equal(tangent_length, 0)) {
         return null; //Planes never cross, or are identical
     }
 
@@ -86,7 +94,7 @@ function plane_intersection(plane_a, plane_b) {
     for (let i = 0;i < 3;i++) {
         m[2] = [0,0,0];
         m[2][i] = 1;
-        if (Math.abs(det(m)) > 10**(-6)) { 
+        if (!approx_equal(det(m), 0)) { 
             answer = lusolve(m, [plane_a.a, plane_b.a, 0]);
             break;
         }
@@ -114,8 +122,8 @@ function edge_intersection(edge_a, edge_b) {
     let sub_m = [];
     let sub_v = [];
     for (let i = 0;i < 3;i++) {
-        if (dot(m[i],m[i])**2 < 10**(-6)) {
-            if (Math.abs(v[i]) > 10**(-6)) {
+        if (approx_equal(dot(m[i],m[i]),0)) {
+            if (!approx_equal(v[i],0)) {
                 return null;
             }
         }
@@ -126,7 +134,7 @@ function edge_intersection(edge_a, edge_b) {
             }
             else {
                 let test_m = sub_m.concat([m[i]]);
-                if (Math.abs(det(test_m)) > 10**(-6)) {
+                if (!approx_equal(det(test_m),0)) {
                     sub_m.push(m[i]);
                     sub_v.push(v[i]);
                     break;
@@ -141,10 +149,8 @@ function edge_intersection(edge_a, edge_b) {
     let potential_crossing = lusolve(sub_m, sub_v);
     a_point = vec_add(scal_mult(edge_a.t, potential_crossing[0][0]), edge_a.a);
     b_point = vec_add(scal_mult(edge_b.t, potential_crossing[1][0]), edge_b.a);
-    for (let i = 0;i < a_point.length;i++) {
-        if (Math.abs(a_point[i] - b_point[i]) > 10**(-6)) {
-            return null; // Is not a crossing point
-        }
+    if (!vectors_approx_equal(a_point, b_point)) {
+        return null; // Is not a crossing point
     }
     return {v: a_point,
             active: true};
@@ -210,7 +216,8 @@ function deactivate_external_vertices(polyhedron) {
     for (const vertex of polyhedron.vertices) {
         let plane_count = 0;
         for (const face of polyhedron.faces) {
-            if (dot(vertex.v, face.n) > face.a + 10**(-6)) {
+            const vn_dot = dot(vertex.v, face.n);
+            if (vn_dot > face.a && !approx_equal(vn_dot, face.a)) {
                 plane_count += 1;
                 if (plane_count >= polyhedron.zone_number) {
                     vertex.active = false;
@@ -260,15 +267,6 @@ function deactivate_singular_components(polyhedron) {
             edge.active = false;
         }
     }
-}
-
-function compare_faces(face_a, face_b) {
-    const n_diff = vec_add(face_a.n, scal_mult(face_b.n, -1));
-    const a_diff = Math.abs(face_a.a - face_b.a)
-    if (dot(n_diff, n_diff) < 10**(-6) && a_diff < 10**(-6)) {
-        return true;
-    }
-    return false;
 }
 
 /*
@@ -336,7 +334,7 @@ function segment_endpoint(v) {
 
 function add_endpoint(v, endpoints) {
     for (const endpoint of endpoints) {
-        if (dist(v, endpoint.v) < 10**(-6)) {
+        if (vectors_approx_equal(v, endpoint.v)) {
             return endpoint;
         }
     }
@@ -379,7 +377,7 @@ function add_edge(edge, segments, endpoints, polyhedron) {
     points.sort(function(a,b) {return a.t_val - b.t_val});
 
     for (let i = 0;i < points.length - 1;i++) {
-        if (dist(points[i].point,points[i+1].point) > 10**(-6)) {
+        if (!vectors_approx_equal(points[i].point,points[i+1].point)) {
             if (segment_in_zone(points[i].point, points[i+1].point, polyhedron)) {
                 add_segment(points[i].point, points[i+1].point, segments, endpoints);
             }
@@ -391,7 +389,8 @@ function add_edge(edge, segments, endpoints, polyhedron) {
 // Find the angle formed by going along a then b
 function find_angle(a, b, normal) {
     let angle = Math.acos(dot(scal_mult(a, -1), b) / Math.sqrt(dot(a,a) * dot(b,b)));
-    const handed_check = dot(normal, cross(a, b)) > 10**(-6);
+    const handedness = dot(normal, cross(a, b));
+    const handed_check = handedness > 0 && !approx_equal(handedness, 0);
     // When a,b parallel, important to return large angle to penalise this choice
     if (!handed_check) {
         angle = 2 * Math.PI - angle
@@ -483,7 +482,6 @@ function find_paths(segments, normal) {
                 continue;
             }
             for (loop_segment of new_loops[i].loop_segments) {
-                console.log(new_loops[i].loop_segments);
                 if (loop_segment.seg.visited === undefined) {
                     loop_segment.seg.visited = [false, false];
                 }
@@ -508,7 +506,8 @@ function segment_in_zone(start, end, polyhedron) {
     const midpoint = find_midpoint(start,end);
     let plane_count = 0;
     for (const face of polyhedron.faces) {
-        if (dot(midpoint, face.n) > face.a + 10**(-6)) {
+        const dot_check = dot(midpoint, face.n);
+        if (dot_check > face.a && !approx_equal(dot_check,face.a)) {
             plane_count += 1;
             if (plane_count >= polyhedron.zone_number) {
                 return false;
@@ -545,7 +544,7 @@ function construct_face_basis(face) {
     let face_basis = [];
     for (const b of [[1,0,0],[0,1,0],[0,0,1]]) {
         let test = cross(b, face.n);
-        if (dot(test,test) > 10**(-6)) {
+        if (!approx_equal(dot(test,test),0)) {
             face_basis.push(test);
             break;
         }
