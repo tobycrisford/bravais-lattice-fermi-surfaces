@@ -143,13 +143,10 @@ function refresh_visualisation() {
     const valence = parseInt(document.getElementById("valence-input").value);
     
     const radius = get_fermi_sphere_radius(reciprocal_lattice_vectors, valence);
-    console.log("Brillouin zone created");
     create_visualisation(poly, radius);
-    console.log("Long function finished");
 }
 
 async function start_async_refresh() {
-    console.log("Creating promise");
     return new Promise(function(resolve, reject) {
         setTimeout(function() {
             refresh_visualisation();
@@ -171,11 +168,8 @@ function disable_button() {
 }
 
 async function visualise_button() {
-    console.log("Button pressed");
     disable_button();
-    console.log("Loading status set");
     const refresh_promise = start_async_refresh().then((value) => (enable_button()));
-    console.log("Promise created");
 }
 
 // Create input form
