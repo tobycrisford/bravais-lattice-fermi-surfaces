@@ -77,41 +77,37 @@ function toggle_sphere() {
 
 const poly_cache = {};
 
+function load_standard_lattice() {
+    const standard_selection = document.getElementById("lattice").value;
+    if (standard_selection === "-") {
+        return;
+    }
+    const prim_vectors = standard_lattices[standard_selection];
+    for (let i = 0;i < 3;i++) {
+        for (let j = 0;j < 3;j++) {
+            document.getElementById(i.toString() + "_" + j.toString()).value = prim_vectors[i][j].toString();
+        }
+    }
+}
+
+function clear_lattice_selection() {
+    document.getElementById("lattice").value = "-";
+}
+
 function refresh_visualisation() {
     console.log("Long function called");
     let cache_key = '';
 
     let reciprocal_lattice_vectors = null;
-    const standard_selection = document.getElementById("lattice").value;
-    cache_key += standard_selection + ' ';
-    if (standard_selection === "-") {
-        const prim_vectors = [[],[],[]];
-        for (let i = 0;i < 3;i++) {
-            for (let j = 0;j < 3;j++) {
-                const val = parseFloat(document.getElementById(i.toString() + "_" + j.toString()).value)
-                prim_vectors[i].push(val);
-                cache_key += val.toString() + ' ';
-            }
+    const prim_vectors = [[],[],[]];
+    for (let i = 0;i < 3;i++) {
+        for (let j = 0;j < 3;j++) {
+            const val = parseFloat(document.getElementById(i.toString() + "_" + j.toString()).value);
+            prim_vectors[i].push(val);
+            cache_key += val.toString() + ' ';
         }
-        reciprocal_lattice_vectors = reciprocal_lattice(prim_vectors);
     }
-    else {
-        let alert_required = false;
-        for (let i = 0;i < 3;i++) {
-            if (!alert_required) {
-                for (let j = 0;j < 3;j++) {
-                    if (document.getElementById(i.toString() + "_" + j.toString()).value !== "") {
-                        alert_required = true;
-                        break;
-                    }
-                }
-            }
-        }
-        if (alert_required) {
-            alert("Your custom primitive vectors are being ignored because you selected a standard lattice");
-        }
-        reciprocal_lattice_vectors = reciprocal_lattice(standard_lattices[standard_selection]);
-    }
+    reciprocal_lattice_vectors = reciprocal_lattice(prim_vectors);
 
     const zone_number = parseInt(document.getElementById("zone-input").value);
     cache_key += ' ' + zone_number.toString()
@@ -176,6 +172,7 @@ add_option(lattice_select, "-");
 for (const lattice in standard_lattices) {
     add_option(lattice_select, lattice);
 }
+lattice_select.addEventListener("change", load_standard_lattice);
 document.getElementById("standard-lattice-select").appendChild(lattice_select);
 const form_element = document.getElementById("custom-prim-vectors");
 for (let i = 0;i < 3;i++) {
@@ -186,6 +183,7 @@ for (let i = 0;i < 3;i++) {
         const comp_input = document.createElement("input");
         comp_input.setAttribute("type","text");
         comp_input.setAttribute("id",i.toString() + "_" + j.toString());
+        comp_input.addEventListener("change", clear_lattice_selection);
         form_element.appendChild(comp_input);
     }
     form_element.appendChild(document.createElement("br"));
