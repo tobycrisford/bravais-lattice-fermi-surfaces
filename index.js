@@ -197,6 +197,7 @@ for (let i = 0;i < 3;i++) {
         const comp_input = document.createElement("input");
         comp_input.setAttribute("type","text");
         comp_input.setAttribute("id",i.toString() + "_" + j.toString());
+        comp_input.setAttribute("size", 10);
         comp_input.addEventListener("change", clear_lattice_selection);
         form_element.appendChild(comp_input);
     }
@@ -226,11 +227,13 @@ sphere_toggle.addEventListener("click", toggle_sphere);
 
 // Create threejs scene
 
+const width = window.innerWidth / 2;
+const height = document.getElementById("test_input").clientHeight;
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+const camera = new THREE.PerspectiveCamera( 35, width / height, 0.1, 2000 );
 
 const renderer = new THREE.WebGLRenderer();
-renderer.setSize( window.innerWidth, window.innerHeight );
+renderer.setSize( width, height);
 document.getElementById("output").appendChild( renderer.domElement );
 let obj = null;
 let sphere = null;

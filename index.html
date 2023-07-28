@@ -1,26 +1,41 @@
 <html>
     <head>
         <script type="module" src="index.js"></script>
+        <style>
+            .parent {
+                margin: 1rem;
+                padding: 2rem 2rem;
+                text-align: left;
+            }
+            .child {
+                display: inline-block;
+                padding: 1rem 1rem;
+                vertical-align: middle;
+            }
+        </style>
     </head>
     <body>
-        <div id="test_input">
-            Choose a standard lattice:
-            <br><br>
-            <div id="standard-lattice-select"></div>
-            <br>
-            Or specify your own primitive vectors:
-            <br><br>
-            <div id="custom-prim-vectors"></div>
-            <br>
-            Specify a brillouin zone number:
-            <div id="zone-number"></div>
-            Specify the valence (for Fermi sphere vis):
-            <div id="valence"></div>
-            <br><br>
-            <input id="test-button" type="button" value="Visualise">
+        <div class="parent">
+            <div id="test_input" class="child">
+                Choose a standard lattice:
+                <br><br>
+                <div id="standard-lattice-select"></div>
+                <br>
+                Or specify your own primitive vectors:
+                <br><br>
+                <div id="custom-prim-vectors"></div>
+                <br>
+                Specify a brillouin zone number:
+                <div id="zone-number"></div>
+                Specify the valence (for Fermi sphere vis):
+                <div id="valence"></div>
+                <br><br>
+                <input id="test-button" type="button" value="Visualise">
+            </div>
+            <div id="output_displays" class="child" style="border:1px solid black">
+                <div id="sphere_toggle">Show Fermi Sphere</div>
+                <div id="output"></div>
+            </div>
         </div>
-        <div id="status"></div>
-        <div id="sphere_toggle">Show Fermi Sphere</div>
-        <div id="output"></div>
     </body>
 </html>
