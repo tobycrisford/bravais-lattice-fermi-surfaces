@@ -50,7 +50,15 @@ function dist(a,b) {
 }
 
 function vectors_approx_equal(a,b) {
-    return dist(a,b) < 10**(-6);
+    if (a.length != b.length) {
+        throw new Error("Cannot compare vectors of different lengths");
+    }
+    for (let i = 0;i < a.length;i++) {
+        if (!approx_equal(a[i],b[i])) {
+            return false;
+        }
+    }
+    return true;
 }
 
 /*
