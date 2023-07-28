@@ -94,8 +94,28 @@ function clear_lattice_selection() {
     document.getElementById("lattice").value = "-";
 }
 
+function validate_inputs() {
+    const text_fields = ["valence-input"];
+    for (let i = 0;i < 3;i++) {
+        for (let j = 0;j < 3;j++) {
+            text_fields.push(i.toString() + "_" + j.toString());
+        }
+    }
+
+    for (const text_field of text_fields) {
+        const input = document.getElementById(text_field).value;
+        if (isNaN(parseFloat(input))) {
+            alert("You must enter numeric values");
+            return false;
+        }
+    }
+    return true;
+}
+
 function refresh_visualisation() {
-    console.log("Long function called");
+    if (!validate_inputs()) {
+        return;
+    }
     let cache_key = '';
 
     let reciprocal_lattice_vectors = null;
