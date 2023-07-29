@@ -18,6 +18,8 @@ If you instead added extra atoms in the middle of the faces of each cube, you wo
 
 Or you might have a completely different sort of lattice. A **hexagonal** lattice consists of two dimensional planes, in layers, each plane filled with identical triangles, with atoms at the corners.
 
+Many other lattice arrangements are possible.
+
 We started by saying that it is the atoms in a solid which are arranged in a regular lattice structure, but really it's only the atomic nuclei which are held in place like this. The electrons are more mobile. But the way they move is influenced by the kind of lattice they are moving through. This tool helps to visualise how a particular lattice structure will affect the way that the electrons move through it.
 
 ### How do electrons move through a lattice?
@@ -47,10 +49,20 @@ Now we are ready to give the crucial distinction between a conductor and an insu
 
 Why is this?
 
-Consider a wire. Within each electron energy band, there will be some states that correspond to electrons moving right along the wire, and some states that correspond to electrons moving left along the wire. If there is no external electric field being applied, a right-moving state will have the same energy as the corresponding left-moving state. Since electrons fill up the lowest energy states first, this means either both states will be empty, or both will be filled. Overall, there will be no net current in one direction over the other. The two states make equal and opposite contributions which cancel out.
+Consider a wire. Within each electron energy band, there will be some states that correspond to electrons moving right along the wire, and some states that correspond to electrons moving left along the wire. If there is no external electric field being applied, a right-moving state will have the same energy as the corresponding left-moving state. Since electrons fill up the lowest energy states first, this means either both states will be empty, or both will be filled. Overall, there will be no net current in one direction over the other. The two states make equal and opposite contributions to the current, which cancel out.
 
 This changes when you apply an electric field to the wire (e.g. by connecting it to a plug socket). Suppose we apply an electric field so that states corresponding to electrons moving right now have a lower energy than the states corresponding to electrons moving left. The electrons will try to rearrange themselves among the available states so that these right-moving states are preferentially filled. If they are able to do that, we will get a net current moving right along the wire.
 
 In a partially filled energy band, this rearrangement is possible, even when an arbitrarily small electric field is applied. There are lots of unoccupied right-moving states within the energy band for the electrons to move into, leaving new vacant left-moving states behind, and giving rise to an overall net current. A material with a partially filled energy band is therefore a *conductor*.
 
 However, if all the energy bands are either fully filled with electrons already, or completely empty, then there is no slack available. No rearrangement of the electrons among the energy states is possible if we only apply a small electric field. This means there will still be no net current overall. We will only see an electric current once we apply an electric field so large that electrons can jump across the gap to a higher energy band. This material is an *insulator*.
+
+### Momentum space
+
+### Electrons only weakly affected by the lattice
+
+### The general case: Strong lattice interactions and "crystal momentum"
+
+### Crystal momentum and band structure
+
+### Connection between the two pictures
