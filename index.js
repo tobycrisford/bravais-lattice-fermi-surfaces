@@ -10,7 +10,7 @@ function create_visualisation(poly, radius) {
         scene.remove(obj);
     }
 
-    const material = new THREE.MeshLambertMaterial( { color: 0xFFFFFF } );
+    const material = new THREE.MeshStandardMaterial( { color: 0xa30000, roughness: 0.5 } );
     obj = new THREE.Group();
     const faces = polyhedron_to_threejs_geometry(poly, material);
     for (const face of faces) {
@@ -18,26 +18,12 @@ function create_visualisation(poly, radius) {
     }
     scene.add(obj);
 
-    const lights = [];
-    const lightValues = [
-        {colour: 0xE60000, intensity: 8, dist: 12, x: 1, y: 0, z: 8},
-        {colour: 0xBE61CF, intensity: 6, dist: 12, x: -2, y: 1, z: -10},
-        {colour: 0xFF0000, intensity: 3, dist: 10, x: 0, y: 10, z: 1},
-        {colour: 0xFF00FF, intensity: 6, dist: 12, x: 0, y: -10, z: -1},
-        {colour: 0x990000, intensity: 6, dist: 12, x: 10, y: 3, z: 0},
-        {colour: 0xFF9933, intensity: 6, dist: 12, x: -10, y: -1, z: 0}
-    ];
-    for (let i=0; i<lightValues.length; i++) {
-        lights[i] = new THREE.PointLight(
-            lightValues[i]['colour'], 
-            lightValues[i]['intensity'], 
-            lightValues[i]['dist']);
-        lights[i].position.set(
-            lightValues[i]['x'], 
-            lightValues[i]['y'], 
-            lightValues[i]['z']);
-        scene.add(lights[i]);
-    }
+    const light = new THREE.AmbientLight(0xFFFFFF, 0.1);
+    scene.add( light );
+
+    const plight = new THREE.DirectionalLight();
+    plight.position.set(1,1,1);
+    scene.add( plight );
 
     camera.position.z = 5;
 
@@ -45,7 +31,7 @@ function create_visualisation(poly, radius) {
         scene.remove(sphere);
     }
     const sphere_geometry = new THREE.SphereGeometry(radius, 32, 16);
-    const sphere_material = new THREE.MeshLambertMaterial({color: 0x0000FF});
+    const sphere_material = new THREE.MeshStandardMaterial({color: 0x049ef4, roughness: 0.8});
     sphere = new THREE.Mesh(sphere_geometry, sphere_material);
     if (sphere_visible) {
         scene.add(sphere);
@@ -230,7 +216,7 @@ sphere_toggle.addEventListener("click", toggle_sphere);
 const width = window.innerWidth / 2;
 const height = document.getElementById("test_input").clientHeight;
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera( 35, width / height, 0.1, 2000 );
+const camera = new THREE.PerspectiveCamera( 50, width / height, 0.1, 2000 );
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize( width, height);
