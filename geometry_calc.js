@@ -155,8 +155,8 @@ function edge_intersection(edge_a, edge_b) {
     }
     
     let potential_crossing = lusolve(sub_m, sub_v);
-    a_point = vec_add(scal_mult(edge_a.t, potential_crossing[0][0]), edge_a.a);
-    b_point = vec_add(scal_mult(edge_b.t, potential_crossing[1][0]), edge_b.a);
+    const a_point = vec_add(scal_mult(edge_a.t, potential_crossing[0][0]), edge_a.a);
+    const b_point = vec_add(scal_mult(edge_b.t, potential_crossing[1][0]), edge_b.a);
     if (!vectors_approx_equal(a_point, b_point)) {
         return null; // Is not a crossing point
     }
@@ -316,8 +316,8 @@ export function create_nth_brillouin_zone(reciprocal_vectors, zone_number) {
 
     //deactivate_duplicate_vertices(poly);
     prune_polyhedron(poly);
-    for (sc of ['faces','edges']) {
-        for (sce of poly[sc]) {
+    for (const sc of ['faces','edges']) {
+        for (const sce of poly[sc]) {
             prune_polyhedron(sce);
         }
     }
@@ -489,7 +489,7 @@ function find_paths(segments, normal) {
             if (new_loops[i] === null) {
                 continue;
             }
-            for (loop_segment of new_loops[i].loop_segments) {
+            for (const loop_segment of new_loops[i].loop_segments) {
                 if (loop_segment.seg.visited === undefined) {
                     loop_segment.seg.visited = [false, false];
                 }

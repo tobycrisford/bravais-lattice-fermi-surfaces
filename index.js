@@ -118,6 +118,8 @@ function refresh_visualisation() {
     const zone_number = parseInt(document.getElementById("zone-input").value);
     cache_key += ' ' + zone_number.toString()
 
+    let poly = null;
+
     if (cache_key in poly_cache) {
         poly = poly_cache[cache_key];
     }
